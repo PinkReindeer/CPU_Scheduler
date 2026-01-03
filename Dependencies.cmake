@@ -84,3 +84,14 @@ if(NOT json_POPULATED)
     FetchContent_Populate(json)
     add_subdirectory(${json_SOURCE_DIR} ${json_BINARY_DIR})
 endif()
+
+# IconFontCppHeaders
+FetchContent_Declare(
+    icon_headers
+    DOWNLOAD_EXTRACT_TIMESTAMP OFF
+    URL https://github.com/juliettef/IconFontCppHeaders/archive/refs/heads/main.zip
+)
+FetchContent_GetProperties(icon_headers)
+if(NOT icon_headers_POPULATED)
+    FetchContent_Populate(icon_headers)
+endif()
