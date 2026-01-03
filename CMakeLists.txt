@@ -10,12 +10,6 @@ set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT $
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 add_executable(${PROJECT_NAME} main.cpp
-                              Graphics/GraphEditorUI.h
-                              Graphics/GraphEditorUI.cpp
-                              Application.h
-                              Application.cpp
-                              Graph.h 
-                              Graph.cpp
 )
 
 # Dependencies
