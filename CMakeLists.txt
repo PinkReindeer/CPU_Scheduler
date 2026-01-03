@@ -10,6 +10,8 @@ set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT $
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 add_executable(${PROJECT_NAME} main.cpp
+                                Application.h
+                                Application.cpp
 )
 
 # Dependencies
@@ -21,7 +23,6 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
     glm
     OpenGL::GL
     imgui
-    nlohmann_json::nlohmann_json
 )
 
 target_include_directories(${PROJECT_NAME} PRIVATE ${icon_headers_SOURCE_DIR})

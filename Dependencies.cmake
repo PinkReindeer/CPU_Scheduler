@@ -72,19 +72,6 @@ if(NOT imgui_POPULATED)
     target_link_libraries(imgui PUBLIC glfw OpenGL::GL)
 endif()
 
-# nlohmann_json
-FetchContent_Declare(
-    json
-    DOWNLOAD_EXTRACT_TIMESTAMP OFF
-    URL https://github.com/nlohmann/json/releases/download/v3.11.3/json.tar.xz
-)
-
-FetchContent_GetProperties(json)
-if(NOT json_POPULATED)
-    FetchContent_Populate(json)
-    add_subdirectory(${json_SOURCE_DIR} ${json_BINARY_DIR})
-endif()
-
 # IconFontCppHeaders
 FetchContent_Declare(
     icon_headers
