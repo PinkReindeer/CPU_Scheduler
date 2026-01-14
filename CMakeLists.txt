@@ -12,6 +12,10 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 add_executable(${PROJECT_NAME} main.cpp
                                 Application.h
                                 Application.cpp
+                                Graphics/SchedulerUI.h
+                                Graphics/SchedulerUI.cpp
+                                Logic/FCFS.h
+                                Logic/FCFS.cpp
 )
 
 # Dependencies

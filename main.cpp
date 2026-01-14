@@ -2,7 +2,7 @@
 
 int main()
 {
-	VisualCPU::Application app;
+	CPUVisualizer::Application app;
 	app.Run();
 
 	return 0;

@@ -4,7 +4,7 @@
 
 #include "Application.h"
 
-namespace VisualCPU
+namespace CPUVisualizer
 {
     static void FramebufferSizeCallback(GLFWwindow* window, int width, int height)
     {

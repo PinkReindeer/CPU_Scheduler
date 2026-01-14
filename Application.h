@@ -1,6 +1,6 @@
 #pragma once
 
-namespace VisualCPU
+namespace CPUVisualizer
 {
     struct ApplicationConfiguration
     {
