@@ -2,6 +2,7 @@
 
 #include "IconsFontAwesome6.h"
 
+#include "Graphics/SchedulerUI.h"
 #include "Application.h"
 
 namespace CPUVisualizer
@@ -61,12 +62,12 @@ namespace CPUVisualizer
         ImGuiIO& io = ImGui::GetIO(); (void)io;
         io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
 
-        //ImFont* mainFont = io.Fonts->AddFontFromFileTTF("fonts/Poppins-Regular.ttf", 18.0f);
+        ImFont* mainFont = io.Fonts->AddFontFromFileTTF("fonts/Poppins-Regular.ttf", 18.0f);
 
-        //if (mainFont == nullptr)
-        //{
-        //    io.Fonts->AddFontDefault();
-        //}
+        if (mainFont == nullptr)
+        {
+            io.Fonts->AddFontDefault();
+        }
 
         static const ImWchar icons_ranges[] = { ICON_MIN_FA, ICON_MAX_FA, 0 };
         ImFontConfig iconsConfig;
@@ -75,7 +76,7 @@ namespace CPUVisualizer
         iconsConfig.GlyphMinAdvanceX = 18.0f;
         iconsConfig.GlyphOffset = ImVec2(0, 1);
 
-        //io.Fonts->AddFontFromFileTTF("fonts/fa-solid-900.ttf", 16.0f, &iconsConfig, icons_ranges);
+        io.Fonts->AddFontFromFileTTF("fonts/fa-solid-900.ttf", 16.0f, &iconsConfig, icons_ranges);
 
         ImGui_ImplGlfw_InitForOpenGL(m_WindowHandle, true);
         ImGui_ImplOpenGL3_Init("#version 330 core");
@@ -100,6 +101,9 @@ namespace CPUVisualizer
         ImGui_ImplOpenGL3_NewFrame();
         ImGui_ImplGlfw_NewFrame();
         ImGui::NewFrame();
+
+        static SchedulerUI schedulerUI;
+        schedulerUI.Render();
 
         ImGui::Render();
 
