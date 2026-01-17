@@ -2,14 +2,6 @@
 
 #include <iostream>
 
-// --- THÊM CÁC THƯ VIỆN NÀY NẾU CHƯA CÓ TRONG PCH ---
-#include <glad/glad.h>      // Hoặc loader bạn đang dùng
-#include <GLFW/glfw3.h>
-#include <imgui.h>
-#include <imgui_impl_glfw.h>
-#include <imgui_impl_opengl3.h>
-// ----------------------------------------------------
-
 #include "IconsFontAwesome6.h"
 
 namespace CPUVisualizer
@@ -23,7 +15,6 @@ namespace CPUVisualizer
     Application::Application(const ApplicationConfiguration& spec)
         : m_Specification(spec)
     {
-        // Constructor của m_SchedulerUI sẽ tự động được gọi ở đây
     }
 
     Application::~Application()
@@ -53,7 +44,6 @@ namespace CPUVisualizer
         glfwSetFramebufferSizeCallback(m_WindowHandle, FramebufferSizeCallback);
         glfwSwapInterval(1);
 
-        // Load OpenGL functions (GLAD)
         if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
         {
             std::cerr << "Failed to initialize GLAD" << std::endl;
@@ -64,7 +54,6 @@ namespace CPUVisualizer
         glEnable(GL_BLEND);
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-        // Setup ImGui
         IMGUI_CHECKVERSION();
         ImGui::CreateContext();
         ImGuiIO& io = ImGui::GetIO(); (void)io;
@@ -90,7 +79,6 @@ namespace CPUVisualizer
             Loop();
         }
 
-        // Cleanup
         ImGui_ImplOpenGL3_Shutdown();
         ImGui_ImplGlfw_Shutdown();
         ImGui::DestroyContext();
@@ -103,16 +91,12 @@ namespace CPUVisualizer
     {
         glfwPollEvents();
 
-        // Start Frame
         ImGui_ImplOpenGL3_NewFrame();
         ImGui_ImplGlfw_NewFrame();
         ImGui::NewFrame();
 
-        // --- GỌI UI TỪ BIẾN THÀNH VIÊN ---
-        // (Không dùng static nữa)
         m_SchedulerUI.Render();
 
-        // Rendering
         ImGui::Render();
 
         int displayWidth, displayHeight;

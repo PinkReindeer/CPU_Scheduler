@@ -1,8 +1,10 @@
 ﻿#pragma once
+
 #include <vector>
 #include <algorithm>
 
-struct Process {
+struct Process
+{
     int id;
     int arrivalTime;
     int burstTime;
@@ -13,14 +15,16 @@ struct Process {
     int turnaroundTime = 0;
 };
 
-struct FCFSResult {
+struct FCFSResult
+{
     std::vector<Process> processes; 
     float averageWaiting = 0.0f;
     float averageTurnaround = 0.0f;
     int totalTime = 0;
 };
 
-class FCFS {
+class FCFS
+{
 public:
     static FCFSResult Calculate(std::vector<Process> inputs);
 };
