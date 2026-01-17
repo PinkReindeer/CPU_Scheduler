@@ -1,4 +1,4 @@
-﻿#include <algorithm> 
+﻿#include <algorithm>
 #include <iostream>
 #include <string>
 
@@ -7,19 +7,17 @@
 #include "SchedulerUI.h"
 
 // --- COLOR PALETTE ---
-#define COL_BG          ImVec4(0.05f, 0.07f, 0.12f, 1.00f)
-#define COL_CARD        ImVec4(0.08f, 0.10f, 0.16f, 1.00f)
-#define COL_INPUT_BG    ImVec4(0.11f, 0.14f, 0.22f, 1.00f)
-#define COL_BORDER      ImVec4(0.20f, 0.25f, 0.35f, 1.00f)
-#define COL_ACCENT      ImVec4(0.15f, 0.45f, 1.00f, 1.00f)
-#define COL_TEXT_SEC    ImVec4(0.55f, 0.60f, 0.70f, 1.00f)
-#define COL_TEXT_MAIN   ImVec4(0.95f, 0.96f, 0.98f, 1.00f)
+#define COL_BG ImVec4(0.05f, 0.07f, 0.12f, 1.00f)
+#define COL_CARD ImVec4(0.08f, 0.10f, 0.16f, 1.00f)
+#define COL_INPUT_BG ImVec4(0.11f, 0.14f, 0.22f, 1.00f)
+#define COL_BORDER ImVec4(0.20f, 0.25f, 0.35f, 1.00f)
+#define COL_ACCENT ImVec4(0.15f, 0.45f, 1.00f, 1.00f)
+#define COL_TEXT_SEC ImVec4(0.55f, 0.60f, 0.70f, 1.00f)
+#define COL_TEXT_MAIN ImVec4(0.95f, 0.96f, 0.98f, 1.00f)
 
 namespace CPUVisualizer
 {
-    SchedulerUI::SchedulerUI()
-    {
-    }
+    SchedulerUI::SchedulerUI() {}
 
     void SchedulerUI::SetupStyles()
     {
@@ -106,7 +104,8 @@ namespace CPUVisualizer
         ImGui::TextColored(COL_ACCENT, ICON_FA_MICROCHIP "  CPU Scheduler");
         ImGui::SameLine(ImGui::GetWindowWidth() - 160);
         ImGui::TextColored(ImVec4(0.2f, 0.8f, 0.6f, 1.0f), ICON_FA_CIRCLE " SYSTEM READY");
-        ImGui::Spacing(); ImGui::Spacing();
+        ImGui::Spacing();
+        ImGui::Spacing();
 
         // --- INTRO ---
         ImGui::PushFont(ImGui::GetIO().Fonts->Fonts[0]);
@@ -128,27 +127,32 @@ namespace CPUVisualizer
 
             {
                 bool isFCFS = (m_SelectedAlgo == 0);
-                if (!isFCFS) ImGui::PushStyleColor(ImGuiCol_Button, COL_INPUT_BG);
+                if (!isFCFS)
+                    ImGui::PushStyleColor(ImGuiCol_Button, COL_INPUT_BG);
 
                 if (ImGui::Button(ICON_FA_CLOCK "   First Come First Serve (FCFS)", ImVec2(availW * 0.49f, 45)))
                     m_SelectedAlgo = 0;
 
-                if (!isFCFS) ImGui::PopStyleColor();
+                if (!isFCFS)
+                    ImGui::PopStyleColor();
             }
 
             ImGui::SameLine();
 
             {
                 bool isPriority = (m_SelectedAlgo == 1);
-                if (!isPriority) ImGui::PushStyleColor(ImGuiCol_Button, COL_INPUT_BG);
+                if (!isPriority)
+                    ImGui::PushStyleColor(ImGuiCol_Button, COL_INPUT_BG);
 
                 if (ImGui::Button(ICON_FA_EXCLAMATION "   Priority Scheduling", ImVec2(availW * 0.49f, 45)))
                     m_SelectedAlgo = 1;
 
-                if (!isPriority) ImGui::PopStyleColor();
+                if (!isPriority)
+                    ImGui::PopStyleColor();
             }
 
-            ImGui::Spacing(); ImGui::Spacing();
+            ImGui::Spacing();
+            ImGui::Spacing();
 
             // Input Fields
             int numCols = (m_SelectedAlgo == 1) ? 4 : 3;
@@ -185,7 +189,8 @@ namespace CPUVisualizer
         ImGui::PopStyleVar(2);
         ImGui::PopStyleColor();
 
-        ImGui::Spacing(); ImGui::Spacing();
+        ImGui::Spacing();
+        ImGui::Spacing();
 
         // --- PROCESS QUEUE ---
         ImGui::Text("Process Queue");
@@ -198,7 +203,11 @@ namespace CPUVisualizer
 
         ImGui::SameLine(ImGui::GetWindowWidth() - 80);
         ImGui::TextColored(COL_TEXT_SEC, "Clear All");
-        if (ImGui::IsItemClicked()) { m_Processes.clear(); m_PIDCounter = 1; }
+        if (ImGui::IsItemClicked())
+        {
+            m_Processes.clear();
+            m_PIDCounter = 1;
+        }
 
         ImGui::Spacing();
 
@@ -242,7 +251,8 @@ namespace CPUVisualizer
                     ImGui::PushStyleColor(ImGuiCol_Button, COL_ACCENT);
                     ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 20);
                     ImGui::Button(("P" + std::to_string(m_Processes[i].pid)).c_str(), ImVec2(32, 32));
-                    ImGui::PopStyleVar(); ImGui::PopStyleColor();
+                    ImGui::PopStyleVar();
+                    ImGui::PopStyleColor();
 
                     ImGui::SameLine();
                     ImGui::SetCursorPosX(ImGui::GetCursorPosX() + 10.0f);
@@ -303,14 +313,20 @@ namespace CPUVisualizer
         ImGui::PopStyleColor(2);
 
         // --- FOOTER ---
-        ImGui::Spacing(); ImGui::Separator(); ImGui::Spacing();
+        ImGui::Spacing();
+        ImGui::Separator();
+        ImGui::Spacing();
         float btnWidth = 150.0f;
         ImGui::SetCursorPosX(ImGui::GetWindowWidth() - (btnWidth * 2 + 50));
 
         ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0, 0, 0, 0));
         ImGui::PushStyleColor(ImGuiCol_Border, COL_BORDER);
         ImGui::PushStyleVar(ImGuiStyleVar_FrameBorderSize, 1.0f);
-        if (ImGui::Button("Reset Default", ImVec2(btnWidth, 45))) { m_Processes.clear(); m_PIDCounter = 1; }
+        if (ImGui::Button("Reset Default", ImVec2(btnWidth, 45)))
+        {
+            m_Processes.clear();
+            m_PIDCounter = 1;
+        }
         ImGui::PopStyleVar();
         ImGui::PopStyleColor(2);
 
@@ -328,10 +344,18 @@ namespace CPUVisualizer
                     proc.id = p.pid;
                     proc.arrivalTime = p.arrival;
                     proc.burstTime = p.burst;
+                    proc.priority = p.priority;
                     logicInputs.push_back(proc);
                 }
 
-                m_Results = FCFS::Calculate(logicInputs);
+                if (m_SelectedAlgo == 0)
+                {
+                    m_Results = FCFS::Calculate(logicInputs);
+                }
+                else if (m_SelectedAlgo == 1)
+                {
+                    m_Results = Preemptive::CalculatePriority(logicInputs);
+                }
 
                 m_ShowResults = true;
             }
@@ -388,7 +412,9 @@ namespace CPUVisualizer
         ImGui::PopStyleVar();
         ImGui::PopStyleColor();
 
-        ImGui::Spacing(); ImGui::Separator(); ImGui::Spacing();
+        ImGui::Spacing();
+        ImGui::Separator();
+        ImGui::Spacing();
 
         ImGui::TextColored(COL_ACCENT, ICON_FA_CHART_BAR " Gantt Chart Visualization");
 
@@ -402,7 +428,8 @@ namespace CPUVisualizer
             float chartY = p.y + 30.0f;
 
             float totalTime = (float)m_Results.totalTime;
-            if (totalTime < 1.0f) totalTime = 1.0f;
+            if (totalTime < 1.0f)
+                totalTime = 1.0f;
 
             float safeW = availW - 40.0f;
             float unitW = safeW / totalTime;
@@ -426,7 +453,8 @@ namespace CPUVisualizer
                 std::string label = "P" + std::to_string(proc.id);
                 ImVec2 textSize = ImGui::CalcTextSize(label.c_str());
 
-                if (x1 - x0 > textSize.x + 4) {
+                if (x1 - x0 > textSize.x + 4)
+                {
                     float textX = x0 + ((x1 - x0) - textSize.x) / 2.0f;
                     float textY = y0 + ((chartHeight)-textSize.y) / 2.0f;
                     draw_list->AddText(ImVec2(textX, textY), IM_COL32(255, 255, 255, 255), label.c_str());
@@ -437,7 +465,8 @@ namespace CPUVisualizer
 
                 draw_list->AddLine(ImVec2(x1, y0 - 5), ImVec2(x1, y1 + 5), IM_COL32(255, 255, 255, 50));
 
-                if (proc.startTime == 0) {
+                if (proc.startTime == 0)
+                {
                     draw_list->AddText(ImVec2(x0, y1 + 5), IM_COL32(180, 180, 180, 255), "0");
                     draw_list->AddLine(ImVec2(x0, y0 - 5), ImVec2(x0, y1 + 5), IM_COL32(255, 255, 255, 50));
                 }
@@ -446,7 +475,9 @@ namespace CPUVisualizer
         ImGui::EndChild();
         ImGui::PopStyleColor();
 
-        ImGui::Spacing(); ImGui::Separator(); ImGui::Spacing();
+        ImGui::Spacing();
+        ImGui::Separator();
+        ImGui::Spacing();
 
         ImGui::TextColored(COL_ACCENT, ICON_FA_LIST " Detailed Analysis");
 
@@ -469,14 +500,18 @@ namespace CPUVisualizer
                 ImGui::TableSetColumnIndex(0);
                 ImGui::TextColored(COL_ACCENT, "P%d", p.id);
 
-                ImGui::TableSetColumnIndex(1); ImGui::Text("%d", p.arrivalTime);
-                ImGui::TableSetColumnIndex(2); ImGui::Text("%d", p.burstTime);
+                ImGui::TableSetColumnIndex(1);
+                ImGui::Text("%d", p.arrivalTime);
+                ImGui::TableSetColumnIndex(2);
+                ImGui::Text("%d", p.burstTime);
 
                 ImGui::TableSetColumnIndex(3);
                 ImGui::TextColored(ImVec4(0.2f, 0.8f, 0.2f, 1.0f), "%d", p.completionTime);
 
-                ImGui::TableSetColumnIndex(4); ImGui::Text("%d", p.turnaroundTime);
-                ImGui::TableSetColumnIndex(5); ImGui::Text("%d", p.waitingTime);
+                ImGui::TableSetColumnIndex(4);
+                ImGui::Text("%d", p.turnaroundTime);
+                ImGui::TableSetColumnIndex(5);
+                ImGui::Text("%d", p.waitingTime);
             }
             ImGui::EndTable();
         }

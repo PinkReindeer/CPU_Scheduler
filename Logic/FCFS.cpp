@@ -1,45 +1,41 @@
 ﻿#include "FCFS.h"
 
-static bool CompareArrival(const Process& a, const Process& b)
+namespace CPUVisualizer
 {
-    if (a.arrivalTime != b.arrivalTime)
-        return a.arrivalTime < b.arrivalTime;
-    return a.id < b.id;
-}
-
-FCFSResult FCFS::Calculate(std::vector<Process> inputs)
-{
-    FCFSResult result;
-    if (inputs.empty()) return result;
-
-    result.processes = inputs;
-    std::sort(result.processes.begin(), result.processes.end(), CompareArrival);
-
-    int currentTime = 0;
-    float totalWait = 0;
-    float totalTAT = 0;
-
-    for (auto& p : result.processes)
+    SchedulerResult FCFS::Calculate(std::vector<Process> inputs)
     {
-        if (currentTime < p.arrivalTime)
+        SchedulerResult result;
+        if (inputs.empty()) return result;
+
+        result.processes = inputs;
+        std::sort(result.processes.begin(), result.processes.end(), CompareArrival);
+
+        int currentTime = 0;
+        float totalWait = 0;
+        float totalTAT = 0;
+
+        for (auto& p : result.processes)
         {
-            currentTime = p.arrivalTime;
+            if (currentTime < p.arrivalTime)
+            {
+                currentTime = p.arrivalTime;
+            }
+
+            p.startTime = currentTime;
+            p.completionTime = p.startTime + p.burstTime;
+            p.turnaroundTime = p.completionTime - p.arrivalTime;
+            p.waitingTime = p.turnaroundTime - p.burstTime;
+
+            totalWait += p.waitingTime;
+            totalTAT += p.turnaroundTime;
+
+            currentTime = p.completionTime;
         }
 
-        p.startTime = currentTime;
-        p.completionTime = p.startTime + p.burstTime;
-        p.turnaroundTime = p.completionTime - p.arrivalTime;
-        p.waitingTime = p.turnaroundTime - p.burstTime;
+        result.totalTime = currentTime;
+        result.averageWaiting = totalWait / result.processes.size();
+        result.averageTurnaround = totalTAT / result.processes.size();
 
-        totalWait += p.waitingTime;
-        totalTAT += p.turnaroundTime;
-
-        currentTime = p.completionTime;
+        return result;
     }
-
-    result.totalTime = currentTime;
-    result.averageWaiting = totalWait / result.processes.size();
-    result.averageTurnaround = totalTAT / result.processes.size();
-
-    return result;
 }
