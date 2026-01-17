@@ -1,9 +1,10 @@
 ﻿#include "SchedulerUI.h"
-#include <algorithm> // std::max
+#include <algorithm> 
 #include <iostream>
 #include <string>
 
 #include "IconsFontAwesome6.h" 
+#include "imgui.h"
 
 // --- COLOR PALETTE ---
 #define COL_BG          ImVec4(0.05f, 0.07f, 0.12f, 1.00f)
@@ -231,7 +232,6 @@ namespace CPUVisualizer
 
                     float textOffset = (rowHeight - ImGui::GetTextLineHeight()) / 2.0f;
                     float badgeOffset = (rowHeight - 32.0f) / 2.0f;
-
                     float moveRight = 15.0f;
 
                     // --- Cột 1: Badge + ID ---
@@ -239,7 +239,6 @@ namespace CPUVisualizer
                     float cellY = ImGui::GetCursorPosY();
 
                     ImGui::SetCursorPosX(ImGui::GetCursorPosX() + 10.0f);
-
                     ImGui::SetCursorPosY(cellY + badgeOffset);
                     ImGui::PushStyleColor(ImGuiCol_Button, COL_ACCENT);
                     ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 20);
@@ -254,27 +253,21 @@ namespace CPUVisualizer
                     // --- Cột 2: Arrival Time ---
                     ImGui::TableSetColumnIndex(1);
                     cellY = ImGui::GetCursorPosY();
-
                     ImGui::SetCursorPosX(ImGui::GetCursorPosX() + moveRight);
-
                     ImGui::SetCursorPosY(cellY + textOffset);
                     ImGui::TextColored(COL_TEXT_SEC, "%d ms", m_Processes[i].arrival);
 
                     // --- Cột 3: Burst Time ---
                     ImGui::TableSetColumnIndex(2);
                     cellY = ImGui::GetCursorPosY();
-
                     ImGui::SetCursorPosX(ImGui::GetCursorPosX() + moveRight);
-
                     ImGui::SetCursorPosY(cellY + textOffset);
                     ImGui::TextColored(COL_TEXT_SEC, "%d ms", m_Processes[i].burst);
 
                     // --- Cột 4: Priority ---
                     ImGui::TableSetColumnIndex(3);
                     cellY = ImGui::GetCursorPosY();
-
                     ImGui::SetCursorPosX(ImGui::GetCursorPosX() + moveRight);
-
                     ImGui::SetCursorPosY(cellY + textOffset);
                     ImGui::TextColored(COL_TEXT_SEC, "%d", m_Processes[i].priority);
 
@@ -324,8 +317,172 @@ namespace CPUVisualizer
 
         ImGui::SameLine();
         ImGui::PushStyleColor(ImGuiCol_Button, COL_ACCENT);
-        ImGui::Button(ICON_FA_PLAY "  Run Simulation", ImVec2(btnWidth + 20, 45));
+
+        if (ImGui::Button(ICON_FA_PLAY "  Run Simulation", ImVec2(btnWidth + 20, 45)))
+        {
+            if (!m_Processes.empty())
+            {
+                // 1. Chuyển đổi dữ liệu UI sang dữ liệu FCFS
+                std::vector<Process> logicInputs;
+                for (auto& p : m_Processes) {
+                    Process proc;
+                    proc.id = p.pid;
+                    proc.arrivalTime = p.arrival;
+                    proc.burstTime = p.burst;
+                    logicInputs.push_back(proc);
+                }
+
+                // 2. Chạy thuật toán
+                m_Results = FCFS::Calculate(logicInputs);
+
+                // 3. Hiện kết quả
+                m_ShowResults = true;
+            }
+        }
+
         ImGui::PopStyleColor();
+
+        ImGui::End();
+
+        if (m_ShowResults)
+        {
+            RenderResults();
+        }
+    }
+    void SchedulerUI::RenderResults()
+    {
+        ImGuiViewport* viewport = ImGui::GetMainViewport();
+        ImVec2 winSize(viewport->Size.x * 0.85f, viewport->Size.y * 0.85f);
+        ImGui::SetNextWindowSize(winSize, ImGuiCond_Appearing);
+        ImGui::SetNextWindowPos(viewport->GetCenter(), ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
+
+        ImGui::Begin("Simulation Results", &m_ShowResults, ImGuiWindowFlags_NoCollapse);
+
+        float contentW = ImGui::GetContentRegionAvail().x;
+
+        ImGui::TextColored(COL_ACCENT, ICON_FA_CHART_PIE " Performance Metrics");
+
+        ImGui::PushStyleColor(ImGuiCol_ChildBg, COL_CARD);
+        ImGui::PushStyleVar(ImGuiStyleVar_ChildRounding, 6.0f);
+
+        if (ImGui::BeginChild("MetricsCard", ImVec2(contentW, 80), true))
+        {
+            ImGui::Columns(2, "MetricCols", false);
+
+            ImGui::SetCursorPosX(ImGui::GetCursorPosX() + 20);
+            ImGui::TextColored(COL_TEXT_SEC, "Avg. Waiting Time");
+            ImGui::SetCursorPosX(ImGui::GetCursorPosX() + 20);
+            ImGui::SetWindowFontScale(1.5f);
+            ImGui::TextColored(COL_TEXT_MAIN, "%.2f ms", m_Results.averageWaiting);
+            ImGui::SetWindowFontScale(1.0f);
+
+            ImGui::NextColumn();
+
+            ImGui::SetCursorPosX(ImGui::GetCursorPosX() + 20);
+            ImGui::TextColored(COL_TEXT_SEC, "Avg. Turnaround Time");
+            ImGui::SetCursorPosX(ImGui::GetCursorPosX() + 20);
+            ImGui::SetWindowFontScale(1.5f);
+            ImGui::TextColored(COL_ACCENT, "%.2f ms", m_Results.averageTurnaround);
+            ImGui::SetWindowFontScale(1.0f);
+
+            ImGui::Columns(1);
+        }
+        ImGui::EndChild();
+        ImGui::PopStyleVar();
+        ImGui::PopStyleColor();
+
+        ImGui::Spacing(); ImGui::Separator(); ImGui::Spacing();
+
+        ImGui::TextColored(COL_ACCENT, ICON_FA_CHART_BAR " Gantt Chart Visualization");
+
+        ImGui::PushStyleColor(ImGuiCol_ChildBg, COL_BG);
+        if (ImGui::BeginChild("GanttArea", ImVec2(contentW, 120), true))
+        {
+            ImDrawList* draw_list = ImGui::GetWindowDrawList();
+            ImVec2 p = ImGui::GetCursorScreenPos();
+            float availW = ImGui::GetContentRegionAvail().x;
+            float chartHeight = 60.0f;
+            float chartY = p.y + 30.0f;
+
+            float totalTime = (float)m_Results.totalTime;
+            if (totalTime < 1.0f) totalTime = 1.0f;
+
+            float safeW = availW - 40.0f;
+            float unitW = safeW / totalTime;
+            float startX = p.x + 20.0f;
+
+            ImU32 blueColor = IM_COL32(60, 120, 200, 255);
+
+            for (int i = 0; i < m_Results.processes.size(); ++i)
+            {
+                const auto& proc = m_Results.processes[i];
+
+                float x0 = startX + (proc.startTime * unitW);
+                float x1 = startX + (proc.completionTime * unitW);
+                float y0 = chartY;
+                float y1 = chartY + chartHeight;
+
+                draw_list->AddRectFilled(ImVec2(x0, y0), ImVec2(x1, y1), blueColor, 4.0f);
+
+                draw_list->AddRect(ImVec2(x0, y0), ImVec2(x1, y1), IM_COL32(255, 255, 255, 100), 4.0f);
+
+                std::string label = "P" + std::to_string(proc.id);
+                ImVec2 textSize = ImGui::CalcTextSize(label.c_str());
+
+                if (x1 - x0 > textSize.x + 4) {
+                    float textX = x0 + ((x1 - x0) - textSize.x) / 2.0f;
+                    float textY = y0 + ((chartHeight)-textSize.y) / 2.0f;
+                    draw_list->AddText(ImVec2(textX, textY), IM_COL32(255, 255, 255, 255), label.c_str());
+                }
+
+                std::string tStr = std::to_string(proc.completionTime);
+                draw_list->AddText(ImVec2(x1 - 5, y1 + 5), IM_COL32(180, 180, 180, 255), tStr.c_str());
+
+                draw_list->AddLine(ImVec2(x1, y0 - 5), ImVec2(x1, y1 + 5), IM_COL32(255, 255, 255, 50));
+
+                if (proc.startTime == 0) {
+                    draw_list->AddText(ImVec2(x0, y1 + 5), IM_COL32(180, 180, 180, 255), "0");
+                    draw_list->AddLine(ImVec2(x0, y0 - 5), ImVec2(x0, y1 + 5), IM_COL32(255, 255, 255, 50));
+                }
+            }
+        }
+        ImGui::EndChild();
+        ImGui::PopStyleColor();
+
+        ImGui::Spacing(); ImGui::Separator(); ImGui::Spacing();
+
+        ImGui::TextColored(COL_ACCENT, ICON_FA_LIST " Detailed Analysis");
+
+        ImGuiTableFlags tableFlags = ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg | ImGuiTableFlags_ScrollY | ImGuiTableFlags_SizingStretchProp;
+
+        if (ImGui::BeginTable("ResultTable", 6, tableFlags))
+        {
+            ImGui::TableSetupColumn("ID", ImGuiTableColumnFlags_WidthFixed, 50);
+            ImGui::TableSetupColumn("Arrival Time");
+            ImGui::TableSetupColumn("Burst Time");
+            ImGui::TableSetupColumn("Finish Time");
+            ImGui::TableSetupColumn("Turnaround");
+            ImGui::TableSetupColumn("Waiting Time");
+            ImGui::TableHeadersRow();
+
+            for (const auto& p : m_Results.processes)
+            {
+                ImGui::TableNextRow();
+
+                ImGui::TableSetColumnIndex(0);
+                ImGui::TextColored(COL_ACCENT, "P%d", p.id);
+
+                ImGui::TableSetColumnIndex(1); ImGui::Text("%d", p.arrivalTime);
+                ImGui::TableSetColumnIndex(2); ImGui::Text("%d", p.burstTime);
+
+                ImGui::TableSetColumnIndex(3);
+                ImGui::TextColored(ImVec4(0.2f, 0.8f, 0.2f, 1.0f), "%d", p.completionTime);
+
+                ImGui::TableSetColumnIndex(4); ImGui::Text("%d", p.turnaroundTime);
+                ImGui::TableSetColumnIndex(5); ImGui::Text("%d", p.waitingTime);
+            }
+            ImGui::EndTable();
+        }
 
         ImGui::End();
     }

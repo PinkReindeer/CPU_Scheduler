@@ -1,13 +1,12 @@
 ﻿#pragma once
-
 #include <vector>
 #include <string>
 #include <imgui.h>
+#include "../Logic/FCFS.h" 
 
 namespace CPUVisualizer
 {
-    struct UIProcess
-    {
+    struct ProcessInput {
         int pid;
         int arrival;
         int burst;
@@ -18,21 +17,25 @@ namespace CPUVisualizer
     {
     public:
         SchedulerUI();
-        ~SchedulerUI() = default;
-
         void Render();
 
     private:
-        void DrawInputGroup(const char* label, const char* icon, int* value, float width, bool readOnly = false);
         void SetupStyles();
+        void DrawInputGroup(const char* label, const char* icon, int* value, float width, bool readOnly = false);
 
-        std::vector<UIProcess> m_Processes;
+        int m_SelectedAlgo = 0; 
         int m_PIDCounter = 1;
-        int m_SelectedAlgo = 1; // 0: FCFS, 1: Priority
 
-        // Biến Input tạm thời
         int m_InArrival = 0;
-        int m_InBurst = 4;
-        int m_InPriority = 2;
+        int m_InBurst = 1;
+        int m_InPriority = 1;
+
+        std::vector<ProcessInput> m_Processes;
+
+    private:
+        FCFSResult m_Results;       
+        bool m_ShowResults = false; 
+
+        void RenderResults();       
     };
 }
