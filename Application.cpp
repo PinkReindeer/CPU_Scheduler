@@ -70,7 +70,6 @@ namespace CPUVisualizer
         ImGuiIO& io = ImGui::GetIO(); (void)io;
         io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
 
-        // Fonts
         ImFont* mainFont = io.Fonts->AddFontFromFileTTF("fonts/Poppins-Regular.ttf", 18.0f);
         if (mainFont == nullptr) io.Fonts->AddFontDefault();
 

@@ -1,10 +1,10 @@
 ﻿#include "SchedulerUI.h"
-#include <algorithm> // std::max
+#include <algorithm> 
 #include <iostream>
 #include <string>
 
-// Header icon font (đảm bảo bạn đã có file này)
 #include "IconsFontAwesome6.h" 
+#include "imgui.h"
 
 // --- COLOR PALETTE ---
 #define COL_BG          ImVec4(0.05f, 0.07f, 0.12f, 1.00f)
@@ -14,8 +14,6 @@
 #define COL_ACCENT      ImVec4(0.15f, 0.45f, 1.00f, 1.00f)
 #define COL_TEXT_SEC    ImVec4(0.55f, 0.60f, 0.70f, 1.00f)
 #define COL_TEXT_MAIN   ImVec4(0.95f, 0.96f, 0.98f, 1.00f)
-#define COL_SUCCESS     ImVec4(0.2f, 0.8f, 0.6f, 1.0f)
-#define COL_WARNING     ImVec4(1.0f, 0.7f, 0.2f, 1.0f)
 
 namespace CPUVisualizer
 {
@@ -94,7 +92,6 @@ namespace CPUVisualizer
         ImGui::EndGroup();
     }
 
-    // --- HÀM CHÍNH ĐỂ ĐIỀU HƯỚNG ---
     void SchedulerUI::Render()
     {
         SetupStyles();
@@ -105,47 +102,17 @@ namespace CPUVisualizer
 
         ImGui::Begin("CPU Scheduler", nullptr, ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoBringToFrontOnFocus);
 
-
-// Header chung
-// (Dùng màu xanh dương trực tiếp, bỏ icon Microchip thay bằng chữ thường)
-        ImGui::TextColored(ImVec4(0.2f, 0.6f, 1.0f, 1.0f), "CPU Scheduler Visualizer");
-
+        // --- HEADER ---
+        ImGui::TextColored(COL_ACCENT, ICON_FA_MICROCHIP "  CPU Scheduler");
         ImGui::SameLine(ImGui::GetWindowWidth() - 160);
-
-        if (m_ShowResults)
-        {
-            // (Dùng màu Xanh Lá trực tiếp, thay icon bằng chữ [Done])
-            ImGui::TextColored(ImVec4(0.2f, 0.8f, 0.6f, 1.0f), "[Done] SIMULATION DONE");
-        }
-        else
-        {
-            // (Dùng màu Cam trực tiếp, thay icon bằng chữ [Ready])
-            ImGui::TextColored(ImVec4(1.0f, 0.7f, 0.2f, 1.0f), "[Ready] SYSTEM READY");
-        }
-
+        ImGui::TextColored(ImVec4(0.2f, 0.8f, 0.6f, 1.0f), ICON_FA_CIRCLE " SYSTEM READY");
         ImGui::Spacing(); ImGui::Spacing();
 
-        // -----------------------------
-
-        // Điều hướng: Nếu cờ showResult = true thì vẽ kết quả, ngược lại vẽ setup
-        if (m_ShowResults) {
-            RenderResults();
-        }
-        else {
-            RenderSetup();
-        }
-
-        ImGui::End();
-    }
-
-    // --- MÀN HÌNH NHẬP LIỆU (Setup) ---
-    void SchedulerUI::RenderSetup()
-    {
         // --- INTRO ---
         ImGui::PushFont(ImGui::GetIO().Fonts->Fonts[0]);
         ImGui::Text("Setup Simulation");
         ImGui::PopFont();
-        ImGui::TextColored(COL_TEXT_SEC, "Configure your process list below. Choose a scheduling algorithm, input process parameters.");
+        ImGui::TextColored(COL_TEXT_SEC, "Configure your process list below. Choose a scheduling algorithm, input process\nparameters, and run the simulation.");
         ImGui::Spacing();
 
         // --- SETUP CARD ---
@@ -171,6 +138,7 @@ namespace CPUVisualizer
 
             ImGui::SameLine();
 
+            // Tương tự cho nút Priority
             {
                 bool isPriority = (m_SelectedAlgo == 1);
                 if (!isPriority) ImGui::PushStyleColor(ImGuiCol_Button, COL_INPUT_BG);
@@ -210,7 +178,7 @@ namespace CPUVisualizer
             {
                 int p = (m_SelectedAlgo == 1) ? m_InPriority : 0;
                 m_Processes.push_back({ m_PIDCounter++, m_InArrival, m_InBurst, p });
-                m_InBurst = (rand() % 10) + 1; // Random burst time cho lần nhập sau đỡ phải gõ
+                m_InBurst = (rand() % 10) + 1;
             }
             ImGui::PopStyleColor();
         }
@@ -235,7 +203,7 @@ namespace CPUVisualizer
 
         ImGui::Spacing();
 
-        // --- TABLE INPUT ---
+        // --- TABLE ---
         ImGui::PushStyleColor(ImGuiCol_ChildBg, COL_CARD);
         ImGui::PushStyleColor(ImGuiCol_Border, COL_BORDER);
         ImGui::PushStyleVar(ImGuiStyleVar_ChildRounding, 8.0f);
@@ -266,55 +234,65 @@ namespace CPUVisualizer
                     float badgeOffset = (rowHeight - 32.0f) / 2.0f;
                     float moveRight = 15.0f;
 
-                    // Col 1: ID
+                    // --- Cột 1: Badge + ID ---
                     ImGui::TableSetColumnIndex(0);
                     float cellY = ImGui::GetCursorPosY();
+
                     ImGui::SetCursorPosX(ImGui::GetCursorPosX() + 10.0f);
                     ImGui::SetCursorPosY(cellY + badgeOffset);
                     ImGui::PushStyleColor(ImGuiCol_Button, COL_ACCENT);
                     ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 20);
                     ImGui::Button(("P" + std::to_string(m_Processes[i].pid)).c_str(), ImVec2(32, 32));
                     ImGui::PopStyleVar(); ImGui::PopStyleColor();
+
                     ImGui::SameLine();
                     ImGui::SetCursorPosX(ImGui::GetCursorPosX() + 10.0f);
                     ImGui::SetCursorPosY(cellY + textOffset);
                     ImGui::TextColored(COL_TEXT_MAIN, "Process %d", m_Processes[i].pid);
 
-                    // Col 2: Arrival
+                    // --- Cột 2: Arrival Time ---
                     ImGui::TableSetColumnIndex(1);
                     cellY = ImGui::GetCursorPosY();
                     ImGui::SetCursorPosX(ImGui::GetCursorPosX() + moveRight);
                     ImGui::SetCursorPosY(cellY + textOffset);
                     ImGui::TextColored(COL_TEXT_SEC, "%d ms", m_Processes[i].arrival);
 
-                    // Col 3: Burst
+                    // --- Cột 3: Burst Time ---
                     ImGui::TableSetColumnIndex(2);
                     cellY = ImGui::GetCursorPosY();
                     ImGui::SetCursorPosX(ImGui::GetCursorPosX() + moveRight);
                     ImGui::SetCursorPosY(cellY + textOffset);
                     ImGui::TextColored(COL_TEXT_SEC, "%d ms", m_Processes[i].burst);
 
-                    // Col 4: Priority
+                    // --- Cột 4: Priority ---
                     ImGui::TableSetColumnIndex(3);
                     cellY = ImGui::GetCursorPosY();
                     ImGui::SetCursorPosX(ImGui::GetCursorPosX() + moveRight);
                     ImGui::SetCursorPosY(cellY + textOffset);
                     ImGui::TextColored(COL_TEXT_SEC, "%d", m_Processes[i].priority);
 
-                    // Col 5: Actions
+                    // --- Cột 5: Trash (Actions) ---
                     ImGui::TableSetColumnIndex(4);
                     cellY = ImGui::GetCursorPosY();
+
                     float columnWidth = ImGui::GetContentRegionAvail().x;
-                    ImGui::SetCursorPosX(ImGui::GetCursorPosX() + (columnWidth - 30) / 2.0f);
+                    float iconWidth = 30.0f;
+                    ImGui::SetCursorPosX(ImGui::GetCursorPosX() + (columnWidth - iconWidth - 40) / 2.0f);
+
                     ImGui::SetCursorPosY(cellY + textOffset);
+
                     ImGui::PushID(i);
                     ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0, 0, 0, 0));
+                    ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(1, 0, 0, 0.1f));
                     ImGui::PushStyleColor(ImGuiCol_Text, COL_TEXT_SEC);
-                    if (ImGui::Button(ICON_FA_TRASH)) {
+
+                    if (ImGui::Button(ICON_FA_TRASH))
+                    {
                         m_Processes.erase(m_Processes.begin() + i);
                         i--;
                     }
-                    ImGui::PopStyleColor(2);
+
+                    ImGui::PopStyleColor(3);
                     ImGui::PopID();
                 }
                 ImGui::EndTable();
@@ -325,7 +303,7 @@ namespace CPUVisualizer
         ImGui::PopStyleVar();
         ImGui::PopStyleColor(2);
 
-        // --- FOOTER (Run Button) ---
+        // --- FOOTER ---
         ImGui::Spacing(); ImGui::Separator(); ImGui::Spacing();
         float btnWidth = 150.0f;
         ImGui::SetCursorPosX(ImGui::GetWindowWidth() - (btnWidth * 2 + 50));
@@ -340,138 +318,172 @@ namespace CPUVisualizer
         ImGui::SameLine();
         ImGui::PushStyleColor(ImGuiCol_Button, COL_ACCENT);
 
-        // NÚT RUN: KÍCH HOẠT LOGIC TẠI ĐÂY
         if (ImGui::Button(ICON_FA_PLAY "  Run Simulation", ImVec2(btnWidth + 20, 45)))
         {
             if (!m_Processes.empty())
             {
-                if (m_SelectedAlgo == 0) // FCFS
-                {
-                    FCFS::RunSimulation(m_Processes);
+                // 1. Chuyển đổi dữ liệu UI sang dữ liệu FCFS
+                std::vector<Process> logicInputs;
+                for (auto& p : m_Processes) {
+                    Process proc;
+                    proc.id = p.pid;
+                    proc.arrivalTime = p.arrival;
+                    proc.burstTime = p.burst;
+                    logicInputs.push_back(proc);
                 }
-                // Nếu sau này thêm Priority thì else if (m_SelectedAlgo == 1) ...
 
-                m_ShowResults = true; // Chuyển sang màn hình kết quả
+                // 2. Chạy thuật toán
+                m_Results = FCFS::Calculate(logicInputs);
+
+                // 3. Hiện kết quả
+                m_ShowResults = true;
             }
         }
-        ImGui::PopStyleColor();
-    }
 
-    // --- MÀN HÌNH KẾT QUẢ (Results) ---
+        ImGui::PopStyleColor();
+
+        ImGui::End();
+
+        if (m_ShowResults)
+        {
+            RenderResults();
+        }
+    }
     void SchedulerUI::RenderResults()
     {
-        // Nút quay lại
-        if (ImGui::Button(ICON_FA_ARROW_LEFT " Back to Setup")) {
-            m_ShowResults = false;
-        }
+        ImGuiViewport* viewport = ImGui::GetMainViewport();
+        ImVec2 winSize(viewport->Size.x * 0.85f, viewport->Size.y * 0.85f);
+        ImGui::SetNextWindowSize(winSize, ImGuiCond_Appearing);
+        ImGui::SetNextWindowPos(viewport->GetCenter(), ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
 
-        ImGui::SameLine();
-        ImGui::Text("Simulation Results (Algorithm: %s)", m_SelectedAlgo == 0 ? "FCFS" : "Priority");
+        ImGui::Begin("Simulation Results", &m_ShowResults, ImGuiWindowFlags_NoCollapse);
 
-        ImGui::Spacing(); ImGui::Spacing();
+        float contentW = ImGui::GetContentRegionAvail().x;
 
-        // --- GANTT CHART ---
-        ImGui::TextColored(COL_TEXT_SEC, "GANTT CHART");
+        ImGui::TextColored(COL_ACCENT, ICON_FA_CHART_PIE " Performance Metrics");
+
         ImGui::PushStyleColor(ImGuiCol_ChildBg, COL_CARD);
-        if (ImGui::BeginChild("GanttChart", ImVec2(0, 100), true))
-        {
-            if (m_Processes.empty()) { ImGui::EndChild(); ImGui::PopStyleColor(); return; }
+        ImGui::PushStyleVar(ImGuiStyleVar_ChildRounding, 6.0f);
 
-            ImDrawList* drawList = ImGui::GetWindowDrawList();
+        if (ImGui::BeginChild("MetricsCard", ImVec2(contentW, 80), true))
+        {
+            ImGui::Columns(2, "MetricCols", false);
+
+            ImGui::SetCursorPosX(ImGui::GetCursorPosX() + 20);
+            ImGui::TextColored(COL_TEXT_SEC, "Avg. Waiting Time");
+            ImGui::SetCursorPosX(ImGui::GetCursorPosX() + 20);
+            ImGui::SetWindowFontScale(1.5f);
+            ImGui::TextColored(COL_TEXT_MAIN, "%.2f ms", m_Results.averageWaiting);
+            ImGui::SetWindowFontScale(1.0f);
+
+            ImGui::NextColumn();
+
+            ImGui::SetCursorPosX(ImGui::GetCursorPosX() + 20);
+            ImGui::TextColored(COL_TEXT_SEC, "Avg. Turnaround Time");
+            ImGui::SetCursorPosX(ImGui::GetCursorPosX() + 20);
+            ImGui::SetWindowFontScale(1.5f);
+            ImGui::TextColored(COL_ACCENT, "%.2f ms", m_Results.averageTurnaround);
+            ImGui::SetWindowFontScale(1.0f);
+
+            ImGui::Columns(1);
+        }
+        ImGui::EndChild();
+        ImGui::PopStyleVar();
+        ImGui::PopStyleColor();
+
+        ImGui::Spacing(); ImGui::Separator(); ImGui::Spacing();
+
+        ImGui::TextColored(COL_ACCENT, ICON_FA_CHART_BAR " Gantt Chart Visualization");
+
+        ImGui::PushStyleColor(ImGuiCol_ChildBg, COL_BG);
+        if (ImGui::BeginChild("GanttArea", ImVec2(contentW, 120), true))
+        {
+            ImDrawList* draw_list = ImGui::GetWindowDrawList();
             ImVec2 p = ImGui::GetCursorScreenPos();
             float availW = ImGui::GetContentRegionAvail().x;
-            float totalTime = (float)m_Processes.back().completionTime;
-            float height = 40.0f;
-            float startY = p.y + 20.0f;
+            float chartHeight = 60.0f;
+            float chartY = p.y + 30.0f;
 
-            if (totalTime > 0)
+            float totalTime = (float)m_Results.totalTime;
+            if (totalTime < 1.0f) totalTime = 1.0f;
+
+            float safeW = availW - 40.0f;
+            float unitW = safeW / totalTime;
+            float startX = p.x + 20.0f;
+
+            ImU32 blueColor = IM_COL32(60, 120, 200, 255);
+
+            for (int i = 0; i < m_Results.processes.size(); ++i)
             {
-                for (const auto& proc : m_Processes)
-                {
-                    float x0 = p.x + (proc.startTime / totalTime) * availW;
-                    float x1 = p.x + (proc.completionTime / totalTime) * availW;
-                    float width = x1 - x0;
+                const auto& proc = m_Results.processes[i];
 
-                    // Vẽ Block
-                    drawList->AddRectFilled(ImVec2(x0, startY), ImVec2(x1, startY + height), ImGui::GetColorU32(COL_ACCENT));
-                    drawList->AddRect(ImVec2(x0, startY), ImVec2(x1, startY + height), ImGui::GetColorU32(COL_BG), 2.0f);
+                float x0 = startX + (proc.startTime * unitW);
+                float x1 = startX + (proc.completionTime * unitW);
+                float y0 = chartY;
+                float y1 = chartY + chartHeight;
 
-                    // Vẽ PID
-                    std::string idText = "P" + std::to_string(proc.pid);
-                    // Chỉ vẽ text nếu block đủ rộng
-                    if (width > 20) {
-                        ImVec2 txtSz = ImGui::CalcTextSize(idText.c_str());
-                        drawList->AddText(ImVec2(x0 + (width - txtSz.x) / 2, startY + (height - txtSz.y) / 2), IM_COL32_WHITE, idText.c_str());
-                    }
+                draw_list->AddRectFilled(ImVec2(x0, y0), ImVec2(x1, y1), blueColor, 4.0f);
 
-                    // Vẽ mốc thời gian (bắt đầu và kết thúc)
-                    std::string tStart = std::to_string(proc.startTime);
-                    std::string tEnd = std::to_string(proc.completionTime);
+                draw_list->AddRect(ImVec2(x0, y0), ImVec2(x1, y1), IM_COL32(255, 255, 255, 100), 4.0f);
 
-                    drawList->AddText(ImVec2(x0, startY + height + 5), IM_COL32(150, 150, 150, 255), tStart.c_str());
-                    // Chỉ vẽ số cuối cùng của process cuối, các số giữa đã có start của thằng sau đè lên rồi
-                    if (proc.pid == m_Processes.back().pid) {
-                        drawList->AddText(ImVec2(x1 - 5, startY + height + 5), IM_COL32(150, 150, 150, 255), tEnd.c_str());
-                    }
+                std::string label = "P" + std::to_string(proc.id);
+                ImVec2 textSize = ImGui::CalcTextSize(label.c_str());
+
+                if (x1 - x0 > textSize.x + 4) {
+                    float textX = x0 + ((x1 - x0) - textSize.x) / 2.0f;
+                    float textY = y0 + ((chartHeight)-textSize.y) / 2.0f;
+                    draw_list->AddText(ImVec2(textX, textY), IM_COL32(255, 255, 255, 255), label.c_str());
+                }
+
+                std::string tStr = std::to_string(proc.completionTime);
+                draw_list->AddText(ImVec2(x1 - 5, y1 + 5), IM_COL32(180, 180, 180, 255), tStr.c_str());
+
+                draw_list->AddLine(ImVec2(x1, y0 - 5), ImVec2(x1, y1 + 5), IM_COL32(255, 255, 255, 50));
+
+                if (proc.startTime == 0) {
+                    draw_list->AddText(ImVec2(x0, y1 + 5), IM_COL32(180, 180, 180, 255), "0");
+                    draw_list->AddLine(ImVec2(x0, y0 - 5), ImVec2(x0, y1 + 5), IM_COL32(255, 255, 255, 50));
                 }
             }
         }
         ImGui::EndChild();
         ImGui::PopStyleColor();
 
-        ImGui::Spacing(); ImGui::Spacing();
+        ImGui::Spacing(); ImGui::Separator(); ImGui::Spacing();
 
-        // --- RESULT TABLE ---
-        ImGui::TextColored(COL_TEXT_SEC, "DETAILED METRICS");
-        ImGui::PushStyleColor(ImGuiCol_ChildBg, COL_CARD);
-        if (ImGui::BeginChild("ResultTable", ImVec2(0, 0), true))
+        ImGui::TextColored(COL_ACCENT, ICON_FA_LIST " Detailed Analysis");
+
+        ImGuiTableFlags tableFlags = ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg | ImGuiTableFlags_ScrollY | ImGuiTableFlags_SizingStretchProp;
+
+        if (ImGui::BeginTable("ResultTable", 6, tableFlags))
         {
-            ImGuiTableFlags tableFlags = ImGuiTableFlags_BordersInnerH | ImGuiTableFlags_PadOuterX | ImGuiTableFlags_RowBg;
-            if (ImGui::BeginTable("table_results", 6, tableFlags))
+            ImGui::TableSetupColumn("ID", ImGuiTableColumnFlags_WidthFixed, 50);
+            ImGui::TableSetupColumn("Arrival Time");
+            ImGui::TableSetupColumn("Burst Time");
+            ImGui::TableSetupColumn("Finish Time");
+            ImGui::TableSetupColumn("Turnaround");
+            ImGui::TableSetupColumn("Waiting Time");
+            ImGui::TableHeadersRow();
+
+            for (const auto& p : m_Results.processes)
             {
-                ImGui::TableSetupColumn("PID", ImGuiTableColumnFlags_WidthFixed, 50);
-                ImGui::TableSetupColumn("Arrival");
-                ImGui::TableSetupColumn("Burst");
-                ImGui::TableSetupColumn("Finish Time");
-                ImGui::TableSetupColumn("Turnaround Time");
-                ImGui::TableSetupColumn("Waiting Time");
+                ImGui::TableNextRow();
 
-                ImGui::TableHeadersRow();
+                ImGui::TableSetColumnIndex(0);
+                ImGui::TextColored(COL_ACCENT, "P%d", p.id);
 
-                double totalWait = 0, totalTurn = 0;
+                ImGui::TableSetColumnIndex(1); ImGui::Text("%d", p.arrivalTime);
+                ImGui::TableSetColumnIndex(2); ImGui::Text("%d", p.burstTime);
 
-                for (const auto& p : m_Processes)
-                {
-                    ImGui::TableNextRow();
-                    ImGui::TableSetColumnIndex(0); ImGui::Text("P%d", p.pid);
-                    ImGui::TableSetColumnIndex(1); ImGui::Text("%d", p.arrival);
-                    ImGui::TableSetColumnIndex(2); ImGui::Text("%d", p.burst);
-                    ImGui::TableSetColumnIndex(3); ImGui::TextColored(COL_SUCCESS, "%d", p.completionTime);
-                    ImGui::TableSetColumnIndex(4); ImGui::Text("%d", p.turnaroundTime);
-                    ImGui::TableSetColumnIndex(5); ImGui::Text("%d", p.waitingTime);
+                ImGui::TableSetColumnIndex(3);
+                ImGui::TextColored(ImVec4(0.2f, 0.8f, 0.2f, 1.0f), "%d", p.completionTime);
 
-                    totalWait += p.waitingTime;
-                    totalTurn += p.turnaroundTime;
-                }
-
-                // Row Average
-                if (!m_Processes.empty())
-                {
-                    ImGui::TableNextRow();
-                    ImGui::TableSetColumnIndex(0);
-                    ImGui::TextColored(COL_ACCENT, "AVG");
-
-                    ImGui::TableSetColumnIndex(4);
-                    ImGui::TextColored(COL_ACCENT, "%.2f", totalTurn / m_Processes.size());
-
-                    ImGui::TableSetColumnIndex(5);
-                    ImGui::TextColored(COL_ACCENT, "%.2f", totalWait / m_Processes.size());
-                }
-
-                ImGui::EndTable();
+                ImGui::TableSetColumnIndex(4); ImGui::Text("%d", p.turnaroundTime);
+                ImGui::TableSetColumnIndex(5); ImGui::Text("%d", p.waitingTime);
             }
+            ImGui::EndTable();
         }
-        ImGui::EndChild();
-        ImGui::PopStyleColor();
+
+        ImGui::End();
     }
 }

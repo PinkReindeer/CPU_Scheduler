@@ -1,31 +1,26 @@
 ﻿#pragma once
 #include <vector>
-#include <string>
+#include <algorithm>
 
-namespace CPUVisualizer {
+struct Process {
+    int id;
+    int arrivalTime;
+    int burstTime;
 
-    // --- ĐỊNH NGHĨA STRUCT TẠI ĐÂY ---
-    struct Process {
-        int pid;
-        int arrival;
-        int burst;
-        int priority;
+    int startTime = 0;
+    int completionTime = 0;
+    int waitingTime = 0;
+    int turnaroundTime = 0;
+};
 
-        // Output fields
-        int startTime = 0;
-        int completionTime = 0;
-        int waitingTime = 0;
-        int turnaroundTime = 0;
-        int responseTime = 0;
-    };
-    // ---------------------------------
+struct FCFSResult {
+    std::vector<Process> processes; 
+    float averageWaiting = 0.0f;
+    float averageTurnaround = 0.0f;
+    int totalTime = 0;
+};
 
-    class FCFS {
-    public:
-        static void RunSimulation(std::vector<Process>& processes);
-        static void ExportToCSV(const std::vector<Process>& processes, const std::string& filePath);
-
-    private:
-        static bool compareArrival(const Process& a, const Process& b);
-    };
-}
+class FCFS {
+public:
+    static FCFSResult Calculate(std::vector<Process> inputs);
+};

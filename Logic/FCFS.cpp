@@ -1,74 +1,41 @@
-﻿// File: Logic/FCFS.cpp
-#include "FCFS.h"
-#include <algorithm> // Cần cho std::sort
-#include <fstream>   // Cần cho ghi file
-#include <iostream>  // Cần cho debug
+﻿#include "FCFS.h"
 
-namespace CPUVisualizer {
+bool CompareArrival(const Process& a, const Process& b) {
+    if (a.arrivalTime != b.arrivalTime)
+        return a.arrivalTime < b.arrivalTime;
+    return a.id < b.id;
+}
 
-    bool FCFS::compareArrival(const Process& a, const Process& b) {
-        if (a.arrival == b.arrival)
-            return a.pid < b.pid;
-        return a.arrival < b.arrival;
-    }
+FCFSResult FCFS::Calculate(std::vector<Process> inputs) {
+    FCFSResult result;
+    if (inputs.empty()) return result;
 
-    void FCFS::RunSimulation(std::vector<Process>& processes) {
-        if (processes.empty()) return;
+    result.processes = inputs;
+    std::sort(result.processes.begin(), result.processes.end(), CompareArrival);
 
-        // 1. Sắp xếp theo Arrival Time
-        std::sort(processes.begin(), processes.end(), compareArrival);
+    int currentTime = 0;
+    float totalWait = 0;
+    float totalTAT = 0;
 
-        int currentTime = 0;
-
-        for (auto& p : processes) {
-            // Nếu CPU rảnh (thời gian hiện tại nhỏ hơn thời gian đến của process)
-            if (currentTime < p.arrival) {
-                currentTime = p.arrival;
-            }
-
-            // 2. Tính toán
-            p.startTime = currentTime;
-            p.completionTime = p.startTime + p.burst;
-            p.turnaroundTime = p.completionTime - p.arrival;
-            p.waitingTime = p.turnaroundTime - p.burst;
-            p.responseTime = p.waitingTime; // Với FCFS thì Response = Waiting
-
-            // Cập nhật thời gian hiện tại
-            currentTime = p.completionTime;
-        }
-    }
-
-    void FCFS::ExportToCSV(const std::vector<Process>& processes, const std::string& filePath) {
-        std::ofstream file(filePath);
-        if (!file.is_open()) return;
-
-        // Ghi Header
-        file << "PID,Arrival,Burst,Priority,Start,Completion,Waiting,Turnaround\n";
-
-        double totalWait = 0;
-        double totalTurn = 0;
-
-        for (const auto& p : processes) {
-            file << p.pid << ","
-                << p.arrival << ","
-                << p.burst << ","
-                << p.priority << ","
-                << p.startTime << ","
-                << p.completionTime << ","
-                << p.waitingTime << ","
-                << p.turnaroundTime << "\n";
-
-            totalWait += p.waitingTime;
-            totalTurn += p.turnaroundTime;
+    for (auto& p : result.processes) {
+        if (currentTime < p.arrivalTime) {
+            currentTime = p.arrivalTime;
         }
 
-        // Ghi dòng trung bình (Average)
-        if (!processes.empty()) {
-            file << ",,,AVERAGE,,,"
-                << (totalWait / processes.size()) << ","
-                << (totalTurn / processes.size()) << "\n";
-        }
+        p.startTime = currentTime;
+        p.completionTime = p.startTime + p.burstTime;
+        p.turnaroundTime = p.completionTime - p.arrivalTime;
+        p.waitingTime = p.turnaroundTime - p.burstTime;
 
-        file.close();
+        totalWait += p.waitingTime;
+        totalTAT += p.turnaroundTime;
+
+        currentTime = p.completionTime;
     }
+
+    result.totalTime = currentTime;
+    result.averageWaiting = totalWait / result.processes.size();
+    result.averageTurnaround = totalTAT / result.processes.size();
+
+    return result;
 }
