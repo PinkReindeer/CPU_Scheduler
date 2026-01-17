@@ -3,16 +3,11 @@
 #include <vector>
 #include <string>
 #include <imgui.h>
+#include "../Logic/FCFS.h" // <--- THÊM DÒNG NÀY để nhận diện struct Process
 
 namespace CPUVisualizer
 {
-    struct UIProcess
-    {
-        int pid;
-        int arrival;
-        int burst;
-        int priority;
-    };
+    // (Đã xóa struct Process ở đây vì nó đã nằm bên FCFS.h rồi)
 
     class SchedulerUI
     {
@@ -23,14 +18,18 @@ namespace CPUVisualizer
         void Render();
 
     private:
-        void DrawInputGroup(const char* label, const char* icon, int* value, float width, bool readOnly = false);
         void SetupStyles();
+        void DrawInputGroup(const char* label, const char* icon, int* value, float width, bool readOnly = false);
+        void RenderSetup();
+        void RenderResults();
 
-        std::vector<UIProcess> m_Processes;
+        // Bây giờ nó sẽ hiểu Process nhờ include FCFS.h bên trên
+        std::vector<Process> m_Processes;
+
         int m_PIDCounter = 1;
-        int m_SelectedAlgo = 1; // 0: FCFS, 1: Priority
+        int m_SelectedAlgo = 0;
+        bool m_ShowResults = false;
 
-        // Biến Input tạm thời
         int m_InArrival = 0;
         int m_InBurst = 4;
         int m_InPriority = 2;

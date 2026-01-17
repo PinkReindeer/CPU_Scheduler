@@ -1,4 +1,5 @@
-#pragma once
+﻿#pragma once
+#include "Graphics/SchedulerUI.h" // <--- 1. Đảm bảo đường dẫn đúng tới file SchedulerUI.h
 
 namespace CPUVisualizer
 {
@@ -16,14 +17,17 @@ namespace CPUVisualizer
         ~Application();
 
         void Run();
-
         void Close();
+
     private:
         void Loop();
+
     private:
         ApplicationConfiguration m_Specification;
-
         struct GLFWwindow* m_WindowHandle = nullptr;
         bool m_Running = true;
+
+        // --- 2. KHAI BÁO UI LÀ THÀNH VIÊN CỦA CLASS ---
+        SchedulerUI m_SchedulerUI;
     };
 }
