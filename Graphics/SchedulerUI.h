@@ -1,12 +1,14 @@
 ﻿#pragma once
+
 #include <vector>
 #include <string>
-#include <imgui.h>
+
 #include "../Logic/FCFS.h" 
 
 namespace CPUVisualizer
 {
-    struct ProcessInput {
+    struct ProcessInput
+    {
         int pid;
         int arrival;
         int burst;

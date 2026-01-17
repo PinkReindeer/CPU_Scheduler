@@ -1,10 +1,10 @@
-﻿#include "SchedulerUI.h"
-#include <algorithm> 
+﻿#include <algorithm> 
 #include <iostream>
 #include <string>
 
-#include "IconsFontAwesome6.h" 
-#include "imgui.h"
+#include "IconsFontAwesome6.h"
+
+#include "SchedulerUI.h"
 
 // --- COLOR PALETTE ---
 #define COL_BG          ImVec4(0.05f, 0.07f, 0.12f, 1.00f)
@@ -138,7 +138,6 @@ namespace CPUVisualizer
 
             ImGui::SameLine();
 
-            // Tương tự cho nút Priority
             {
                 bool isPriority = (m_SelectedAlgo == 1);
                 if (!isPriority) ImGui::PushStyleColor(ImGuiCol_Button, COL_INPUT_BG);
@@ -234,7 +233,7 @@ namespace CPUVisualizer
                     float badgeOffset = (rowHeight - 32.0f) / 2.0f;
                     float moveRight = 15.0f;
 
-                    // --- Cột 1: Badge + ID ---
+                    // --- Col 1: Badge + ID ---
                     ImGui::TableSetColumnIndex(0);
                     float cellY = ImGui::GetCursorPosY();
 
@@ -250,28 +249,28 @@ namespace CPUVisualizer
                     ImGui::SetCursorPosY(cellY + textOffset);
                     ImGui::TextColored(COL_TEXT_MAIN, "Process %d", m_Processes[i].pid);
 
-                    // --- Cột 2: Arrival Time ---
+                    // --- Col 2: Arrival Time ---
                     ImGui::TableSetColumnIndex(1);
                     cellY = ImGui::GetCursorPosY();
                     ImGui::SetCursorPosX(ImGui::GetCursorPosX() + moveRight);
                     ImGui::SetCursorPosY(cellY + textOffset);
                     ImGui::TextColored(COL_TEXT_SEC, "%d ms", m_Processes[i].arrival);
 
-                    // --- Cột 3: Burst Time ---
+                    // --- Col 3: Burst Time ---
                     ImGui::TableSetColumnIndex(2);
                     cellY = ImGui::GetCursorPosY();
                     ImGui::SetCursorPosX(ImGui::GetCursorPosX() + moveRight);
                     ImGui::SetCursorPosY(cellY + textOffset);
                     ImGui::TextColored(COL_TEXT_SEC, "%d ms", m_Processes[i].burst);
 
-                    // --- Cột 4: Priority ---
+                    // --- Col 4: Priority ---
                     ImGui::TableSetColumnIndex(3);
                     cellY = ImGui::GetCursorPosY();
                     ImGui::SetCursorPosX(ImGui::GetCursorPosX() + moveRight);
                     ImGui::SetCursorPosY(cellY + textOffset);
                     ImGui::TextColored(COL_TEXT_SEC, "%d", m_Processes[i].priority);
 
-                    // --- Cột 5: Trash (Actions) ---
+                    // --- Col 5: Trash (Actions) ---
                     ImGui::TableSetColumnIndex(4);
                     cellY = ImGui::GetCursorPosY();
 
@@ -322,9 +321,9 @@ namespace CPUVisualizer
         {
             if (!m_Processes.empty())
             {
-                // 1. Chuyển đổi dữ liệu UI sang dữ liệu FCFS
                 std::vector<Process> logicInputs;
-                for (auto& p : m_Processes) {
+                for (auto& p : m_Processes)
+                {
                     Process proc;
                     proc.id = p.pid;
                     proc.arrivalTime = p.arrival;
@@ -332,10 +331,8 @@ namespace CPUVisualizer
                     logicInputs.push_back(proc);
                 }
 
-                // 2. Chạy thuật toán
                 m_Results = FCFS::Calculate(logicInputs);
 
-                // 3. Hiện kết quả
                 m_ShowResults = true;
             }
         }

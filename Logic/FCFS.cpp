@@ -1,12 +1,14 @@
 ﻿#include "FCFS.h"
 
-bool CompareArrival(const Process& a, const Process& b) {
+static bool CompareArrival(const Process& a, const Process& b)
+{
     if (a.arrivalTime != b.arrivalTime)
         return a.arrivalTime < b.arrivalTime;
     return a.id < b.id;
 }
 
-FCFSResult FCFS::Calculate(std::vector<Process> inputs) {
+FCFSResult FCFS::Calculate(std::vector<Process> inputs)
+{
     FCFSResult result;
     if (inputs.empty()) return result;
 
@@ -17,8 +19,10 @@ FCFSResult FCFS::Calculate(std::vector<Process> inputs) {
     float totalWait = 0;
     float totalTAT = 0;
 
-    for (auto& p : result.processes) {
-        if (currentTime < p.arrivalTime) {
+    for (auto& p : result.processes)
+    {
+        if (currentTime < p.arrivalTime)
+        {
             currentTime = p.arrivalTime;
         }
 
