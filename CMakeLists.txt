@@ -16,6 +16,9 @@ add_executable(${PROJECT_NAME} main.cpp
                                 Graphics/SchedulerUI.cpp
                                 Logic/FCFS.h
                                 Logic/FCFS.cpp
+                                Logic/Preemptive.h
+                                Logic/Preemptive.cpp
+                                Logic/SchedulerCommon.h
 )
 
 # Dependencies
