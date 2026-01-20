@@ -25,6 +25,7 @@ add_executable(${PROJECT_NAME} main.cpp
 include(Dependencies.cmake)
 
 target_link_libraries(${PROJECT_NAME} PRIVATE
+    glad
     glfw
     glm
     OpenGL::GL
