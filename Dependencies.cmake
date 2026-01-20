@@ -22,10 +22,6 @@ endif()
 # OpenGL
 find_package(OpenGL REQUIRED)
 
-# GLAD
-add_library(glad "${CMAKE_CURRENT_SOURCE_DIR}/glad.c")
-target_include_directories(glad PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/glad/include")
-
 # GLM
 find_package(glm 1.0.1 QUIET)
 if (NOT glm_FOUND)
