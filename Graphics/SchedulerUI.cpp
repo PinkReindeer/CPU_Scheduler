@@ -49,13 +49,9 @@ namespace CPUVisualizer
         ImGui::Text("%s", label);
         ImGui::PopStyleColor();
 
-        ImGui::Spacing();
-
         ImVec2 p = ImGui::GetCursorScreenPos();
         ImDrawList* drawList = ImGui::GetWindowDrawList();
         float boxHeight = 45.0f;
-
-        ImGui::Dummy(ImVec2(safeWidth, boxHeight));
 
         drawList->AddRectFilled(p, ImVec2(p.x + safeWidth, p.y + boxHeight), ImGui::GetColorU32(COL_INPUT_BG), 6.0f);
         drawList->AddRect(p, ImVec2(p.x + safeWidth, p.y + boxHeight), ImGui::GetColorU32(COL_BORDER), 6.0f);
@@ -86,7 +82,9 @@ namespace CPUVisualizer
         }
         ImGui::PopStyleColor(2);
 
-        ImGui::SetCursorScreenPos(ImVec2(p.x, p.y + boxHeight + 10.0f));
+        ImGui::SetCursorScreenPos(p);
+        ImGui::Dummy(ImVec2(safeWidth, boxHeight));
+
         ImGui::EndGroup();
     }
 
@@ -107,7 +105,6 @@ namespace CPUVisualizer
         ImGui::SameLine(windowWidth - 150);
         ImGui::TextColored(ImVec4(0.2f, 0.8f, 0.6f, 1.0f), ICON_FA_CIRCLE " SYSTEM READY");
         ImGui::Spacing();
-        ImGui::Spacing();
 
         // --- INTRO ---
         ImGui::PushFont(ImGui::GetIO().Fonts->Fonts[0]);
@@ -123,7 +120,7 @@ namespace CPUVisualizer
         ImGui::PushStyleVar(ImGuiStyleVar_ChildRounding, 8.0f);
         ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(24, 24));
 
-        if (ImGui::BeginChild("SetupCard", ImVec2(0, 335), true, ImGuiWindowFlags_AlwaysUseWindowPadding))
+        if (ImGui::BeginChild("SetupCard", ImVec2(0, 280), true, ImGuiWindowFlags_AlwaysUseWindowPadding))
         {
             ImGui::TextColored(COL_TEXT_SEC, "SCHEDULING ALGORITHM");
 
@@ -131,19 +128,23 @@ namespace CPUVisualizer
 
             {
                 bool isFCFS = (m_SelectedAlgo == 0);
-                if (!isFCFS) ImGui::PushStyleColor(ImGuiCol_Button, COL_INPUT_BG);
-                if (ImGui::Button(ICON_FA_CLOCK "   First Come First Serve (FCFS)", ImVec2((availW * 0.5f) - 5, 45))) m_SelectedAlgo = 0;
-                if (!isFCFS) ImGui::PopStyleColor();
+                if (!isFCFS) 
+                    ImGui::PushStyleColor(ImGuiCol_Button, COL_INPUT_BG);
+                if (ImGui::Button(ICON_FA_CLOCK "   First Come First Serve (FCFS)", ImVec2((availW * 0.5f) - 5, 45))) 
+                    m_SelectedAlgo = 0;
+                if (!isFCFS) 
+                    ImGui::PopStyleColor();
             }
             ImGui::SameLine();
             {
                 bool isPriority = (m_SelectedAlgo == 1);
-                if (!isPriority) ImGui::PushStyleColor(ImGuiCol_Button, COL_INPUT_BG);
-                if (ImGui::Button(ICON_FA_EXCLAMATION "   Priority Scheduling", ImVec2(ImGui::GetContentRegionAvail().x, 45))) m_SelectedAlgo = 1;
-                if (!isPriority) ImGui::PopStyleColor();
+                if (!isPriority) 
+                    ImGui::PushStyleColor(ImGuiCol_Button, COL_INPUT_BG);
+                if (ImGui::Button(ICON_FA_EXCLAMATION "   Priority Scheduling", ImVec2(ImGui::GetContentRegionAvail().x, 45))) 
+                    m_SelectedAlgo = 1;
+                if (!isPriority) 
+                    ImGui::PopStyleColor();
             }
-
-            ImGui::Spacing(); ImGui::Spacing();
 
             int numCols = (m_SelectedAlgo == 1) ? 4 : 3;
             float spacing = ImGui::GetStyle().ItemSpacing.x;
@@ -157,18 +158,20 @@ namespace CPUVisualizer
             DrawInputGroup("ARRIVAL TIME (MS)", ICON_FA_CLOCK, &m_InArrival, colW);
             ImGui::SameLine();
             DrawInputGroup("BURST TIME (MS)", ICON_FA_BOLT, &m_InBurst, colW);
-            if (m_SelectedAlgo == 1) {
+            if (m_SelectedAlgo == 1)
+            {
                 ImGui::SameLine();
                 DrawInputGroup("PRIORITY", ICON_FA_ARROW_DOWN_SHORT_WIDE, &m_InPriority, colW);
             }
 
-            ImGui::SetCursorPosY(ImGui::GetCursorPosY() - 10);
+            ImGui::SetCursorPosY(ImGui::GetCursorPosY());
 
             float btnW = 150.0f;
             ImGui::SetCursorPosX(ImGui::GetContentRegionAvail().x + ImGui::GetStyle().WindowPadding.x - btnW - 24);
 
             ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.2f, 0.25f, 0.35f, 1.0f));
-            if (ImGui::Button(ICON_FA_PLUS " Add Process", ImVec2(btnW, 40))) {
+            if (ImGui::Button(ICON_FA_PLUS " Add Process", ImVec2(btnW, 40)))
+            {
                 int p = (m_SelectedAlgo == 1) ? m_InPriority : 0;
                 m_Processes.push_back({ m_PIDCounter++, m_InArrival, m_InBurst, p });
                 m_InBurst = (rand() % 10) + 1;
@@ -179,7 +182,7 @@ namespace CPUVisualizer
         ImGui::PopStyleVar(2);
         ImGui::PopStyleColor();
 
-        ImGui::Spacing(); ImGui::Spacing();
+        ImGui::Spacing();
 
         // --- PROCESS QUEUE ---
         ImGui::Text("Process Queue");

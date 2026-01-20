@@ -24,6 +24,7 @@ namespace CPUVisualizer
 
 	private:
 		void SetupStyles();
+		void RenderResults();
 		void DrawInputGroup(const char* label, const char* icon, int* value, float width, bool readOnly = false);
 
 		int m_SelectedAlgo = 0;
@@ -38,7 +39,5 @@ namespace CPUVisualizer
 	private:
 		SchedulerResult m_Results;
 		bool m_ShowResults = false;
-
-		void RenderResults();
 	};
 }
