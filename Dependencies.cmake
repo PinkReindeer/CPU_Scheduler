@@ -26,23 +26,6 @@ find_package(OpenGL REQUIRED)
 add_library(glad "${CMAKE_CURRENT_SOURCE_DIR}/glad.c")
 target_include_directories(glad PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/glad/include")
 
-# GLM
-find_package(glm 1.0.1 QUIET)
-if (NOT glm_FOUND)
-    FetchContent_Declare(
-            glm
-            DOWNLOAD_EXTRACT_TIMESTAMP OFF
-            URL https://github.com/g-truc/glm/archive/refs/tags/1.0.1.zip
-    )
-    FetchContent_GetProperties(glm)
-    if (NOT glm_POPULATED)
-        set(FETCHCONTENT_QUIET NO)
-        FetchContent_Populate(glm)
-        add_subdirectory(${glm_SOURCE_DIR} ${glm_BINARY_DIR})
-    endif()
-endif()
-set_target_properties(glm PROPERTIES FOLDER "Dependencies")
-
 # Dear ImGui
 FetchContent_Declare(
     imgui
