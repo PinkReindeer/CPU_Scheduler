@@ -7,7 +7,7 @@ namespace CPUVisualizer
     struct ApplicationConfiguration
     {
         int width = 1280;
-        int height = 720;
+        int height = 800;
         const char* title = "CPU Schedule Demonstration";
     };
 
