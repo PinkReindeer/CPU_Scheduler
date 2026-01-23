@@ -6,6 +6,17 @@
 
 namespace CPUVisualizer
 {
+    static void renderFPS()
+    {
+        ImGui::Begin("Performance");
+
+        ImGuiIO& io = ImGui::GetIO();
+
+        ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / io.Framerate, io.Framerate);
+
+        ImGui::End();
+    }
+
     static void FramebufferSizeCallback(GLFWwindow* window, int width, int height)
     {
         (void)window;
@@ -94,6 +105,9 @@ namespace CPUVisualizer
         ImGui_ImplOpenGL3_NewFrame();
         ImGui_ImplGlfw_NewFrame();
         ImGui::NewFrame();
+        
+        // Show FPS for testing
+        renderFPS();
 
         m_SchedulerUI.Render();
 

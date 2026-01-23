@@ -1,6 +1,7 @@
 ﻿#include <algorithm>
 #include <iostream>
 #include <string>
+#include <chrono>
 
 #include "IconsFontAwesome6.h"
 
@@ -366,8 +367,10 @@ namespace CPUVisualizer
         {
             if (!m_Processes.empty())
             {
+
                 std::vector<Process> logicInputs;
-                for (auto& p : m_Processes) {
+                for (auto& p : m_Processes)
+                {
                     Process proc;
                     proc.id = p.pid;
                     proc.arrivalTime = p.arrival;
@@ -375,11 +378,19 @@ namespace CPUVisualizer
                     proc.priority = p.priority;
                     logicInputs.push_back(proc);
                 }
+
+                auto start = std::chrono::high_resolution_clock::now();
+
                 if (m_SelectedAlgo == 0)
                     m_Results = FCFS::Calculate(logicInputs);
                 else if (m_SelectedAlgo == 1)
                     m_Results = Preemptive::CalculatePriority(logicInputs);
                 m_ShowResults = true;
+
+                auto end = std::chrono::high_resolution_clock::now();
+                std::chrono::duration<double, std::milli> elapsed = end - start;
+
+                std::cout << "Calculation took: " << elapsed.count() << " ms" << std::endl;
             }
         }
         ImGui::PopStyleColor();
