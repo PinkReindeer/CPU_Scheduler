@@ -26,9 +26,17 @@ namespace CPUVisualizer
         int priority;
     };
 
+    struct GanttSegment
+    {
+        int pid;
+        int startTime;
+        int endTime;
+    };
+
     struct SchedulerResult
     {
         std::vector<Process> processes;
+        std::vector<GanttSegment> scheduleHistory;
         float averageWaiting = 0.0f;
         float averageTurnaround = 0.0f;
         int totalTime = 0;

@@ -26,6 +26,8 @@ namespace CPUVisualizer
             p.turnaroundTime = p.completionTime - p.arrivalTime;
             p.waitingTime = p.turnaroundTime - p.burstTime;
 
+            result.scheduleHistory.push_back({ p.id, p.startTime, p.completionTime });
+
             totalWait += p.waitingTime;
             totalTAT += p.turnaroundTime;
 

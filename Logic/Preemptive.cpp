@@ -27,6 +27,9 @@ namespace CPUVisualizer
         }
         currentTime = minArrival;
 
+        int lastPid = -1;
+        int segmentStart = currentTime;
+
         while (completed < n)
         {
             int highestPriorityIdx = -1;
@@ -44,6 +47,19 @@ namespace CPUVisualizer
                         highestPriorityIdx = i;
                     }
                 }
+            }
+
+            int currentPid = (highestPriorityIdx == -1) ? -1 : result.processes[highestPriorityIdx].id;
+
+            if (currentPid != lastPid)
+            {
+                if (lastPid != -1)
+                {
+                    result.scheduleHistory.push_back({ lastPid, segmentStart, currentTime });
+                }
+
+                lastPid = currentPid;
+                segmentStart = currentTime;
             }
 
             if (highestPriorityIdx == -1)
@@ -68,6 +84,11 @@ namespace CPUVisualizer
                 current.turnaroundTime = current.completionTime - current.arrivalTime;
                 current.waitingTime = current.turnaroundTime - current.burstTime;
             }
+        }
+
+        if (lastPid != -1)
+        {
+            result.scheduleHistory.push_back({ lastPid, segmentStart, currentTime });
         }
 
         float totalWait = 0;

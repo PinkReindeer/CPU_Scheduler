@@ -157,13 +157,20 @@ namespace CPUVisualizer
 
             DrawInputGroup("PROCESS ID", ICON_FA_MICROCHIP, &m_PIDCounter, colW, true);
             ImGui::SameLine();
+
             DrawInputGroup("ARRIVAL TIME (MS)", ICON_FA_CLOCK, &m_InArrival, colW);
+            if (m_InArrival < 0) m_InArrival = 0;
+
             ImGui::SameLine();
+
             DrawInputGroup("BURST TIME (MS)", ICON_FA_BOLT, &m_InBurst, colW);
+            if (m_InBurst < 1) m_InBurst = 1;
+
             if (m_SelectedAlgo == 1)
             {
                 ImGui::SameLine();
                 DrawInputGroup("PRIORITY", ICON_FA_ARROW_DOWN_SHORT_WIDE, &m_InPriority, colW);
+                if (m_InPriority < 0) m_InPriority = 0;
             }
 
             ImGui::SetCursorPosY(ImGui::GetCursorPosY());
@@ -316,6 +323,16 @@ namespace CPUVisualizer
             if (!path.empty())
             {
                 std::vector<ProcessInput> imported = CsvIO::ImportProcesses(path);
+
+                for (auto& p : imported)
+                {
+                    if (p.arrival < 0) p.arrival = 0;
+
+                    if (p.burst < 1) p.burst = 1;
+
+                    if (p.priority < 0) p.priority = 0;
+                }
+
                 if (!imported.empty())
                 {
                     m_Processes = imported;
@@ -476,19 +493,19 @@ namespace CPUVisualizer
             ImU32 textGray = IM_COL32(180, 180, 180, 255);
             ImU32 lineGray = IM_COL32(255, 255, 255, 50);
 
-            for (int i = 0; i < m_Results.processes.size(); ++i)
+            for (const auto& segment : m_Results.scheduleHistory)
             {
-                const auto& proc = m_Results.processes[i];
-
-                float x0 = startX + (proc.startTime * unitW);
-                float x1 = startX + (proc.completionTime * unitW);
+                float x0 = startX + (segment.startTime * unitW);
+                float x1 = startX + (segment.endTime * unitW);
                 float y0 = chartY;
                 float y1 = chartY + chartHeight;
+
+                if (x1 <= x0) continue;
 
                 draw_list->AddRectFilled(ImVec2(x0, y0), ImVec2(x1, y1), blueColor, 4.0f);
                 draw_list->AddRect(ImVec2(x0, y0), ImVec2(x1, y1), whiteTransparent, 4.0f);
 
-                std::string label = "P" + std::to_string(proc.id);
+                std::string label = "P" + std::to_string(segment.pid);
                 ImVec2 textSize = ImGui::CalcTextSize(label.c_str());
 
                 if (x1 - x0 > textSize.x + 4)
@@ -498,11 +515,11 @@ namespace CPUVisualizer
                     draw_list->AddText(ImVec2(textX, textY), textWhite, label.c_str());
                 }
 
-                std::string tStr = std::to_string(proc.completionTime);
+                std::string tStr = std::to_string(segment.endTime);
                 draw_list->AddText(ImVec2(x1 - 5, y1 + 5), textGray, tStr.c_str());
                 draw_list->AddLine(ImVec2(x1, y0 - 5), ImVec2(x1, y1 + 5), lineGray);
 
-                if (proc.startTime == 0)
+                if (segment.startTime == 0)
                 {
                     draw_list->AddText(ImVec2(x0, y1 + 5), textGray, "0");
                     draw_list->AddLine(ImVec2(x0, y0 - 5), ImVec2(x0, y1 + 5), lineGray);
