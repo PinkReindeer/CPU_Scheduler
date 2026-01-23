@@ -19,6 +19,8 @@ add_executable(${PROJECT_NAME} main.cpp
                                 Logic/Preemptive.h
                                 Logic/Preemptive.cpp
                                 Logic/SchedulerCommon.h
+                                Logic/IO/CsvIO.h
+                                Logic/IO/CsvIO.cpp
 )
 
 add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD

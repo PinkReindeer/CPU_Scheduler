@@ -18,6 +18,14 @@ namespace CPUVisualizer
         int turnaroundTime = 0;
     };
 
+    struct ProcessInput
+    {
+        int pid;
+        int arrival;
+        int burst;
+        int priority;
+    };
+
     struct SchedulerResult
     {
         std::vector<Process> processes;

@@ -4,6 +4,7 @@
 
 #include "IconsFontAwesome6.h"
 
+#include "../Logic/IO/CsvIO.h"
 #include "SchedulerUI.h"
 
 // --- COLOR PALETTE ---
@@ -96,7 +97,8 @@ namespace CPUVisualizer
         ImGui::SetNextWindowPos(viewport->Pos);
         ImGui::SetNextWindowSize(viewport->Size);
 
-        ImGui::Begin("CPU Scheduler", nullptr, ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_HorizontalScrollbar);
+        ImGui::Begin("CPU Scheduler", nullptr, ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoMove |
+            ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_HorizontalScrollbar);
 
         // --- HEADER ---
         float windowWidth = ImGui::GetContentRegionAvail().x;
@@ -128,21 +130,21 @@ namespace CPUVisualizer
 
             {
                 bool isFCFS = (m_SelectedAlgo == 0);
-                if (!isFCFS) 
+                if (!isFCFS)
                     ImGui::PushStyleColor(ImGuiCol_Button, COL_INPUT_BG);
-                if (ImGui::Button(ICON_FA_CLOCK "   First Come First Serve (FCFS)", ImVec2((availW * 0.5f) - 5, 45))) 
+                if (ImGui::Button(ICON_FA_CLOCK "   First Come First Serve (FCFS)", ImVec2((availW * 0.5f) - 5, 45)))
                     m_SelectedAlgo = 0;
-                if (!isFCFS) 
+                if (!isFCFS)
                     ImGui::PopStyleColor();
             }
             ImGui::SameLine();
             {
                 bool isPriority = (m_SelectedAlgo == 1);
-                if (!isPriority) 
+                if (!isPriority)
                     ImGui::PushStyleColor(ImGuiCol_Button, COL_INPUT_BG);
-                if (ImGui::Button(ICON_FA_EXCLAMATION "   Priority Scheduling", ImVec2(ImGui::GetContentRegionAvail().x, 45))) 
+                if (ImGui::Button(ICON_FA_EXCLAMATION "   Priority Scheduling", ImVec2(ImGui::GetContentRegionAvail().x, 45)))
                     m_SelectedAlgo = 1;
-                if (!isPriority) 
+                if (!isPriority)
                     ImGui::PopStyleColor();
             }
 
@@ -202,10 +204,11 @@ namespace CPUVisualizer
 
         ImGui::Spacing();
 
-		// --- TABLE ---
+        // --- TABLE ---
         float footerHeight = 85.0f;
         float tableHeight = ImGui::GetContentRegionAvail().y - footerHeight;
-        if (tableHeight < 100.0f) tableHeight = 100.0f;
+        if (tableHeight < 100.0f) 
+            tableHeight = 100.0f;
 
         ImGui::PushStyleColor(ImGuiCol_ChildBg, COL_CARD);
         ImGui::PushStyleColor(ImGuiCol_Border, COL_BORDER);
@@ -300,8 +303,34 @@ namespace CPUVisualizer
         float btnWidth = 150.0f;
         float regionAvail = ImGui::GetContentRegionAvail().x;
 
-        ImGui::SetCursorPosX(regionAvail - (btnWidth * 2 + 20));
+        ImGui::SetCursorPosX(regionAvail - (btnWidth * 3 + 40));
         ImGui::SetCursorPosY(ImGui::GetCursorPosY() + 8.0f);
+
+        ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0, 0, 0, 0));
+        ImGui::PushStyleColor(ImGuiCol_Border, COL_BORDER);
+        ImGui::PushStyleVar(ImGuiStyleVar_FrameBorderSize, 1.0f);
+
+        if (ImGui::Button(ICON_FA_FILE_IMPORT "  Import CSV", ImVec2(btnWidth, 45)))
+        {
+            std::string path = CsvIO::OpenFileDialog();
+            if (!path.empty())
+            {
+                std::vector<ProcessInput> imported = CsvIO::ImportProcesses(path);
+                if (!imported.empty())
+                {
+                    m_Processes = imported;
+                    int maxPid = 0;
+                    for (const auto& p : m_Processes)
+                        if (p.pid > maxPid)
+                            maxPid = p.pid;
+                    m_PIDCounter = maxPid + 1;
+                }
+            }
+        }
+        ImGui::PopStyleVar();
+        ImGui::PopStyleColor(2);
+
+        ImGui::SameLine();
 
         ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0, 0, 0, 0));
         ImGui::PushStyleColor(ImGuiCol_Border, COL_BORDER);
@@ -329,8 +358,10 @@ namespace CPUVisualizer
                     proc.priority = p.priority;
                     logicInputs.push_back(proc);
                 }
-                if (m_SelectedAlgo == 0) m_Results = FCFS::Calculate(logicInputs);
-                else if (m_SelectedAlgo == 1) m_Results = Preemptive::CalculatePriority(logicInputs);
+                if (m_SelectedAlgo == 0)
+                    m_Results = FCFS::Calculate(logicInputs);
+                else if (m_SelectedAlgo == 1)
+                    m_Results = Preemptive::CalculatePriority(logicInputs);
                 m_ShowResults = true;
             }
         }
@@ -338,7 +369,8 @@ namespace CPUVisualizer
 
         ImGui::End();
 
-        if (m_ShowResults) RenderResults();
+        if (m_ShowResults)
+            RenderResults();
     }
 
     void SchedulerUI::RenderResults()
@@ -354,6 +386,16 @@ namespace CPUVisualizer
 
         ImGui::TextColored(COL_ACCENT, ICON_FA_CHART_PIE " Performance Metrics");
 
+        ImGui::SameLine(ImGui::GetContentRegionAvail().x - 140);
+        if (ImGui::Button(ICON_FA_FILE_EXPORT "  Export CSV", ImVec2(140, 30)))
+        {
+            std::string path = CsvIO::SaveFileDialog();
+            if (!path.empty())
+            {
+                CsvIO::ExportResults(path, m_Results);
+            }
+        }
+
         ImGui::PushStyleColor(ImGuiCol_ChildBg, COL_CARD);
         ImGui::PushStyleVar(ImGuiStyleVar_ChildRounding, 6.0f);
 
@@ -362,30 +404,30 @@ namespace CPUVisualizer
             ImGui::Columns(2, "MetricCols", false);
 
             auto RenderCenteredMetric = [&](const char* label, float value, ImVec4 valColor) {
-                float colW = ImGui::GetColumnWidth();
-                float currentY = ImGui::GetCursorPosY();
+                    float colW = ImGui::GetColumnWidth();
+                    float currentY = ImGui::GetCursorPosY();
 
-                char valStr[32];
-                snprintf(valStr, sizeof(valStr), "%.2f ms", value);
+                    char valStr[32];
+                    snprintf(valStr, sizeof(valStr), "%.2f ms", value);
 
-                ImVec2 labelSize = ImGui::CalcTextSize(label);
-                ImVec2 valSizeBase = ImGui::CalcTextSize(valStr);
-                ImVec2 valSizeScaled = ImVec2(valSizeBase.x * 1.5f, valSizeBase.y * 1.5f);
+                    ImVec2 labelSize = ImGui::CalcTextSize(label);
+                    ImVec2 valSizeBase = ImGui::CalcTextSize(valStr);
+                    ImVec2 valSizeScaled = ImVec2(valSizeBase.x * 1.5f, valSizeBase.y * 1.5f);
 
+                    float contentHeight = labelSize.y + ImGui::GetStyle().ItemSpacing.y + valSizeScaled.y;
+                    float boxHeight = ImGui::GetWindowHeight() - ImGui::GetStyle().WindowPadding.y * 2;
 
-                float contentHeight = labelSize.y + ImGui::GetStyle().ItemSpacing.y + valSizeScaled.y;
-                float boxHeight = ImGui::GetWindowHeight() - ImGui::GetStyle().WindowPadding.y * 2;
+                    float offsetY = (boxHeight - contentHeight) / 2.0f;
+                    if (offsetY > 0)
+                        ImGui::SetCursorPosY(currentY + offsetY);
 
-                float offsetY = (boxHeight - contentHeight) / 2.0f;
-                if (offsetY > 0) ImGui::SetCursorPosY(currentY + offsetY);
+                    ImGui::SetCursorPosX(ImGui::GetCursorPosX() + (colW - labelSize.x) / 2.0f);
+                    ImGui::TextColored(COL_TEXT_SEC, "%s", label);
 
-                ImGui::SetCursorPosX(ImGui::GetCursorPosX() + (colW - labelSize.x) / 2.0f);
-                ImGui::TextColored(COL_TEXT_SEC, "%s", label);
-
-                ImGui::SetCursorPosX(ImGui::GetCursorPosX() + (colW - valSizeScaled.x) / 2.0f);
-                ImGui::SetWindowFontScale(1.5f);
-                ImGui::TextColored(valColor, "%s", valStr);
-                ImGui::SetWindowFontScale(1.0f);
+                    ImGui::SetCursorPosX(ImGui::GetCursorPosX() + (colW - valSizeScaled.x) / 2.0f);
+                    ImGui::SetWindowFontScale(1.5f);
+                    ImGui::TextColored(valColor, "%s", valStr);
+                    ImGui::SetWindowFontScale(1.0f);
                 };
 
             RenderCenteredMetric("Avg. Waiting Time", m_Results.averageWaiting, COL_TEXT_MAIN);
@@ -421,7 +463,8 @@ namespace CPUVisualizer
             float chartY = p.y + (availH - chartHeight) / 2.0f;
 
             float totalTime = (float)m_Results.totalTime;
-            if (totalTime < 1.0f) totalTime = 1.0f;
+            if (totalTime < 1.0f)
+                totalTime = 1.0f;
 
             float safeW = availW - paddingX;
             float unitW = safeW / totalTime;
