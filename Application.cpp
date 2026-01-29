@@ -107,7 +107,7 @@ namespace CPUVisualizer
         ImGui::NewFrame();
         
         // Show FPS for testing
-        renderFPS();
+        //renderFPS();
 
         m_SchedulerUI.Render();
 

@@ -51,7 +51,8 @@ namespace CPUVisualizer
                     p.pid = std::stoi(seglist[0]);
                     p.arrival = std::stoi(seglist[1]);
                     p.burst = std::stoi(seglist[2]);
-                    p.priority = (seglist.size() > 3) ? std::stoi(seglist[3]) : 0;
+                    p.priority = (seglist.size() > 3 && !seglist[3].empty()) ? std::stoi(seglist[3]) : 0;
+                    p.memory = (seglist.size() > 4 && !seglist[4].empty()) ? std::stoi(seglist[4]) : 0;
                     processes.push_back(p);
                 }
                 catch (...)
@@ -69,13 +70,13 @@ namespace CPUVisualizer
         if (!file.is_open())
             return;
 
-        file << "ID,Arrival Time,Burst Time,Finish Time,Turnaround Time,Waiting Time\n";
+        file << "ID,Arrival Time,Burst Time, Memory Required,Finish Time,Turnaround Time,Waiting Time\n";
 
         for (const auto& p : results.processes)
         {
             file << p.id << "," << p.arrivalTime << "," << p.burstTime << ","
-                << p.completionTime << "," << p.turnaroundTime << "," << p.waitingTime
-                << "\n";
+                << p.memoryNeeded << "," << p.completionTime << ","
+                << p.turnaroundTime << "," << p.waitingTime << "\n";
         }
 
         file << "\n";

@@ -7,15 +7,7 @@
 
 #include "../Logic/IO/CsvIO.h"
 #include "SchedulerUI.h"
-
-// --- COLOR PALETTE ---
-#define COL_BG ImVec4(0.05f, 0.07f, 0.12f, 1.00f)
-#define COL_CARD ImVec4(0.08f, 0.10f, 0.16f, 1.00f)
-#define COL_INPUT_BG ImVec4(0.11f, 0.14f, 0.22f, 1.00f)
-#define COL_BORDER ImVec4(0.20f, 0.25f, 0.35f, 1.00f)
-#define COL_ACCENT ImVec4(0.15f, 0.45f, 1.00f, 1.00f)
-#define COL_TEXT_SEC ImVec4(0.55f, 0.60f, 0.70f, 1.00f)
-#define COL_TEXT_MAIN ImVec4(0.95f, 0.96f, 0.98f, 1.00f)
+#include "Theme.h"
 
 namespace CPUVisualizer
 {
@@ -32,14 +24,14 @@ namespace CPUVisualizer
         style.WindowPadding = ImVec2(32, 32);
 
         ImVec4* colors = style.Colors;
-        colors[ImGuiCol_WindowBg] = COL_BG;
-        colors[ImGuiCol_ChildBg] = COL_CARD;
-        colors[ImGuiCol_Text] = COL_TEXT_MAIN;
-        colors[ImGuiCol_Border] = COL_BORDER;
-        colors[ImGuiCol_Button] = COL_ACCENT;
+        colors[ImGuiCol_WindowBg] = Theme::Background;
+        colors[ImGuiCol_ChildBg] = Theme::Card;
+        colors[ImGuiCol_Text] = Theme::TextMain;
+        colors[ImGuiCol_Border] = Theme::Border;
+        colors[ImGuiCol_Button] = Theme::Accent;
         colors[ImGuiCol_ButtonHovered] = ImVec4(0.25f, 0.55f, 1.00f, 1.00f);
         colors[ImGuiCol_ButtonActive] = ImVec4(0.10f, 0.35f, 0.90f, 1.00f);
-        colors[ImGuiCol_Header] = COL_ACCENT;
+        colors[ImGuiCol_Header] = Theme::Accent;
     }
 
     void SchedulerUI::DrawInputGroup(const char* label, const char* icon, int* value, float width, bool readOnly)
@@ -47,7 +39,7 @@ namespace CPUVisualizer
         float safeWidth = std::max(10.0f, width);
         ImGui::BeginGroup();
 
-        ImGui::PushStyleColor(ImGuiCol_Text, COL_TEXT_SEC);
+        ImGui::PushStyleColor(ImGuiCol_Text, Theme::TextSecondary);
         ImGui::Text("%s", label);
         ImGui::PopStyleColor();
 
@@ -55,8 +47,8 @@ namespace CPUVisualizer
         ImDrawList* drawList = ImGui::GetWindowDrawList();
         float boxHeight = 45.0f;
 
-        drawList->AddRectFilled(p, ImVec2(p.x + safeWidth, p.y + boxHeight), ImGui::GetColorU32(COL_INPUT_BG), 6.0f);
-        drawList->AddRect(p, ImVec2(p.x + safeWidth, p.y + boxHeight), ImGui::GetColorU32(COL_BORDER), 6.0f);
+        drawList->AddRectFilled(p, ImVec2(p.x + safeWidth, p.y + boxHeight), ImGui::GetColorU32(Theme::InputBg), 6.0f);
+        drawList->AddRect(p, ImVec2(p.x + safeWidth, p.y + boxHeight), ImGui::GetColorU32(Theme::Border), 6.0f);
 
         float textHeight = ImGui::GetTextLineHeight();
         float textCenterY = (boxHeight - textHeight) / 2.0f;
@@ -71,7 +63,7 @@ namespace CPUVisualizer
         if (readOnly)
         {
             ImGui::SetCursorScreenPos(ImVec2(p.x + 40, p.y + textCenterY));
-            ImGui::PushStyleColor(ImGuiCol_Text, COL_TEXT_MAIN);
+            ImGui::PushStyleColor(ImGuiCol_Text, Theme::TextMain);
             ImGui::Text("P%d", *value);
             ImGui::PopStyleColor();
         }
@@ -90,50 +82,62 @@ namespace CPUVisualizer
         ImGui::EndGroup();
     }
 
-    void SchedulerUI::Render()
+    std::vector<Process> SchedulerUI::PrepareLogicInputs() const
     {
-        SetupStyles();
+        std::vector<Process> logicInputs;
+        logicInputs.reserve(m_Processes.size());
+        for (const auto& p : m_Processes)
+        {
+            Process proc;
+            proc.id = p.pid;
+            proc.arrivalTime = p.arrival;
+            proc.burstTime = p.burst;
+            proc.priority = p.priority;
+            proc.memoryNeeded = p.memory;
+            logicInputs.push_back(proc);
+        }
+        return logicInputs;
+    }
 
-        const ImGuiViewport* viewport = ImGui::GetMainViewport();
-        ImGui::SetNextWindowPos(viewport->Pos);
-        ImGui::SetNextWindowSize(viewport->Size);
-
-        ImGui::Begin("CPU Scheduler", nullptr, ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoMove |
-            ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_HorizontalScrollbar);
-
-        // --- HEADER ---
+    void SchedulerUI::RenderHeader()
+    {
         float windowWidth = ImGui::GetContentRegionAvail().x;
-
-        ImGui::TextColored(COL_ACCENT, ICON_FA_MICROCHIP "  CPU Scheduler");
+        ImGui::TextColored(Theme::Accent, ICON_FA_MICROCHIP "  CPU Scheduler");
         ImGui::SameLine(windowWidth - 150);
         ImGui::TextColored(ImVec4(0.2f, 0.8f, 0.6f, 1.0f), ICON_FA_CIRCLE " SYSTEM READY");
         ImGui::Spacing();
+    }
 
-        // --- INTRO ---
+    void SchedulerUI::RenderIntro()
+    {
         ImGui::PushFont(ImGui::GetIO().Fonts->Fonts[0]);
         ImGui::Text("Setup Simulation");
         ImGui::PopFont();
         ImGui::PushTextWrapPos(ImGui::GetFontSize() * 35.0f);
-        ImGui::TextColored(COL_TEXT_SEC, "Configure your process list below. Choose a scheduling algorithm, input process parameters.");
+        ImGui::TextColored(Theme::TextSecondary, "Configure your process list below. Choose a scheduling algorithm, input process parameters.");
         ImGui::PopTextWrapPos();
         ImGui::Spacing();
+    }
 
-        // --- SETUP CARD ---
-        ImGui::PushStyleColor(ImGuiCol_Border, COL_BORDER);
+    void SchedulerUI::RenderSetupCard()
+    {
+        ImGui::PushStyleColor(ImGuiCol_Border, Theme::Border);
         ImGui::PushStyleVar(ImGuiStyleVar_ChildRounding, 8.0f);
         ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(24, 24));
+        
+        ImGuiWindowFlags flags = ImGuiWindowFlags_AlwaysUseWindowPadding | ImGuiWindowFlags_NoScrollWithMouse | ImGuiWindowFlags_NoScrollbar;
 
-        if (ImGui::BeginChild("SetupCard", ImVec2(0, 280), true, ImGuiWindowFlags_AlwaysUseWindowPadding))
+        if (ImGui::BeginChild("SetupCard", ImVec2(0, 290), true, flags))
         {
-            ImGui::TextColored(COL_TEXT_SEC, "SCHEDULING ALGORITHM");
+            ImGui::TextColored(Theme::TextSecondary, "SCHEDULING ALGORITHM");
 
             float availW = ImGui::GetContentRegionAvail().x;
 
             {
                 bool isFCFS = (m_SelectedAlgo == 0);
                 if (!isFCFS)
-                    ImGui::PushStyleColor(ImGuiCol_Button, COL_INPUT_BG);
-                if (ImGui::Button(ICON_FA_CLOCK "   First Come First Serve (FCFS)", ImVec2((availW * 0.5f) - 5, 45)))
+                    ImGui::PushStyleColor(ImGuiCol_Button, Theme::InputBg);
+                if (ImGui::Button(ICON_FA_CLOCK "   First Come First Serve (FCFS)", ImVec2((availW * 0.5f) - 5, 40)))
                     m_SelectedAlgo = 0;
                 if (!isFCFS)
                     ImGui::PopStyleColor();
@@ -142,14 +146,14 @@ namespace CPUVisualizer
             {
                 bool isPriority = (m_SelectedAlgo == 1);
                 if (!isPriority)
-                    ImGui::PushStyleColor(ImGuiCol_Button, COL_INPUT_BG);
-                if (ImGui::Button(ICON_FA_EXCLAMATION "   Priority Scheduling", ImVec2(ImGui::GetContentRegionAvail().x, 45)))
+                    ImGui::PushStyleColor(ImGuiCol_Button, Theme::InputBg);
+                if (ImGui::Button(ICON_FA_EXCLAMATION "   Priority Scheduling", ImVec2(ImGui::GetContentRegionAvail().x, 40)))
                     m_SelectedAlgo = 1;
                 if (!isPriority)
                     ImGui::PopStyleColor();
             }
 
-            int numCols = (m_SelectedAlgo == 1) ? 4 : 3;
+            int numCols = (m_SelectedAlgo == 1) ? 5 : 4;
             float spacing = ImGui::GetStyle().ItemSpacing.x;
             float totalSpacing = (numCols - 1) * spacing;
             float currentAvailW = ImGui::GetContentRegionAvail().x;
@@ -157,6 +161,7 @@ namespace CPUVisualizer
             float colW = (currentAvailW > totalSpacing) ? (currentAvailW - totalSpacing) / (float)numCols : 100.0f;
 
             DrawInputGroup("PROCESS ID", ICON_FA_MICROCHIP, &m_PIDCounter, colW, true);
+
             ImGui::SameLine();
 
             DrawInputGroup("ARRIVAL TIME (MS)", ICON_FA_CLOCK, &m_InArrival, colW);
@@ -167,6 +172,11 @@ namespace CPUVisualizer
             DrawInputGroup("BURST TIME (MS)", ICON_FA_BOLT, &m_InBurst, colW);
             if (m_InBurst < 1) m_InBurst = 1;
 
+            ImGui::SameLine();
+
+            DrawInputGroup("MEMORY (MB)", ICON_FA_MEMORY, &m_InMemory, colW);
+            if (m_InMemory < 0) m_InMemory = 0;
+
             if (m_SelectedAlgo == 1)
             {
                 ImGui::SameLine();
@@ -174,7 +184,12 @@ namespace CPUVisualizer
                 if (m_InPriority < 0) m_InPriority = 0;
             }
 
-            ImGui::SetCursorPosY(ImGui::GetCursorPosY());
+            ImGui::TextColored(Theme::TextSecondary, "SYSTEM MEMORY LIMIT (MB)");
+            ImGui::SetNextItemWidth(200);
+            ImGui::InputInt("##TotalMem", &m_SystemTotalMemory, 128, 1024);
+            if (m_SystemTotalMemory < 1) m_SystemTotalMemory = 1;
+
+            ImGui::SetCursorPosY(ImGui::GetCursorPosY() - 65);
 
             float btnW = 150.0f;
             ImGui::SetCursorPosX(ImGui::GetContentRegionAvail().x + ImGui::GetStyle().WindowPadding.x - btnW - 24);
@@ -183,7 +198,7 @@ namespace CPUVisualizer
             if (ImGui::Button(ICON_FA_PLUS " Add Process", ImVec2(btnW, 40)))
             {
                 int p = (m_SelectedAlgo == 1) ? m_InPriority : 0;
-                m_Processes.push_back({ m_PIDCounter++, m_InArrival, m_InBurst, p });
+                m_Processes.push_back({ m_PIDCounter++, m_InArrival, m_InBurst, p, m_InMemory });
                 m_InBurst = (rand() % 10) + 1;
             }
             ImGui::PopStyleColor();
@@ -191,35 +206,37 @@ namespace CPUVisualizer
         ImGui::EndChild();
         ImGui::PopStyleVar(2);
         ImGui::PopStyleColor();
+    }
 
-        ImGui::Spacing();
-
-        // --- PROCESS QUEUE ---
+    void SchedulerUI::RenderProcessQueue()
+    {
         ImGui::Text("Process Queue");
         ImGui::SameLine();
-        ImGui::PushStyleColor(ImGuiCol_Button, COL_ACCENT);
+        ImGui::PushStyleColor(ImGuiCol_Button, Theme::Accent);
         ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 12.0f);
         ImGui::SmallButton(std::to_string(m_Processes.size()).c_str());
         ImGui::PopStyleVar();
         ImGui::PopStyleColor();
 
         ImGui::SameLine(ImGui::GetContentRegionAvail().x - 60);
-        ImGui::TextColored(COL_TEXT_SEC, "Clear All");
+        ImGui::TextColored(Theme::TextSecondary, "Clear All");
         if (ImGui::IsItemClicked()) {
             m_Processes.clear();
             m_PIDCounter = 1;
         }
 
         ImGui::Spacing();
+    }
 
-        // --- TABLE ---
+    void SchedulerUI::RenderTable()
+    {
         float footerHeight = 85.0f;
         float tableHeight = ImGui::GetContentRegionAvail().y - footerHeight;
-        if (tableHeight < 100.0f) 
+        if (tableHeight < 100.0f)
             tableHeight = 100.0f;
 
-        ImGui::PushStyleColor(ImGuiCol_ChildBg, COL_CARD);
-        ImGui::PushStyleColor(ImGuiCol_Border, COL_BORDER);
+        ImGui::PushStyleColor(ImGuiCol_ChildBg, Theme::Card);
+        ImGui::PushStyleColor(ImGuiCol_Border, Theme::Border);
         ImGui::PushStyleVar(ImGuiStyleVar_ChildRounding, 8.0f);
 
         if (ImGui::BeginChild("TableScrollRegion", ImVec2(0, tableHeight), true))
@@ -227,15 +244,16 @@ namespace CPUVisualizer
             ImGuiTableFlags tableFlags = ImGuiTableFlags_BordersInnerH | ImGuiTableFlags_PadOuterX | ImGuiTableFlags_ScrollX;
             ImGui::PushStyleVar(ImGuiStyleVar_CellPadding, ImVec2(20, 10));
 
-            if (ImGui::BeginTable("table_queue", 5, tableFlags))
+            if (ImGui::BeginTable("table_queue", 6, tableFlags))
             {
                 ImGui::TableSetupColumn("PROCESS ID", ImGuiTableColumnFlags_WidthFixed, 120);
                 ImGui::TableSetupColumn("ARRIVAL TIME", ImGuiTableColumnFlags_WidthStretch);
                 ImGui::TableSetupColumn("BURST TIME", ImGuiTableColumnFlags_WidthStretch);
+                ImGui::TableSetupColumn("MEMORY", ImGuiTableColumnFlags_WidthStretch);
                 ImGui::TableSetupColumn("PRIORITY", ImGuiTableColumnFlags_WidthStretch);
                 ImGui::TableSetupColumn("ACTIONS", ImGuiTableColumnFlags_WidthFixed, 80);
 
-                ImGui::PushStyleColor(ImGuiCol_Text, COL_TEXT_SEC);
+                ImGui::PushStyleColor(ImGuiCol_Text, Theme::TextSecondary);
                 ImGui::TableHeadersRow();
                 ImGui::PopStyleColor();
 
@@ -252,35 +270,44 @@ namespace CPUVisualizer
                     float cellY = ImGui::GetCursorPosY();
                     ImGui::SetCursorPosX(ImGui::GetCursorPosX() + 10.0f);
                     ImGui::SetCursorPosY(cellY + badgeOffset);
-                    ImGui::PushStyleColor(ImGuiCol_Button, COL_ACCENT);
+                    ImGui::PushStyleColor(ImGuiCol_Button, Theme::Accent);
                     ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 20);
                     ImGui::Button(("P" + std::to_string(m_Processes[i].pid)).c_str(), ImVec2(32, 32));
                     ImGui::PopStyleVar();
                     ImGui::PopStyleColor();
                     ImGui::SameLine();
                     ImGui::SetCursorPosY(cellY + textOffset);
-                    ImGui::TextColored(COL_TEXT_MAIN, " P-%d", m_Processes[i].pid);
+                    ImGui::TextColored(Theme::TextMain, " P-%d", m_Processes[i].pid);
 
                     // Col 2: Arrival Time
                     ImGui::TableSetColumnIndex(1);
                     cellY = ImGui::GetCursorPosY();
                     ImGui::SetCursorPosY(cellY + textOffset);
-                    ImGui::TextColored(COL_TEXT_SEC, "%d ms", m_Processes[i].arrival);
+                    ImGui::TextColored(Theme::TextSecondary, "%d ms", m_Processes[i].arrival);
 
                     // Col 3: Burst
                     ImGui::TableSetColumnIndex(2);
                     cellY = ImGui::GetCursorPosY();
                     ImGui::SetCursorPosY(cellY + textOffset);
-                    ImGui::TextColored(COL_TEXT_SEC, "%d ms", m_Processes[i].burst);
+                    ImGui::TextColored(Theme::TextSecondary, "%d ms", m_Processes[i].burst);
 
-                    // Col 4: Priority
+                    // Col 4: Memory
                     ImGui::TableSetColumnIndex(3);
                     cellY = ImGui::GetCursorPosY();
                     ImGui::SetCursorPosY(cellY + textOffset);
-                    ImGui::TextColored(COL_TEXT_SEC, "%d", m_Processes[i].priority);
+                    if (m_Processes[i].memory > m_SystemTotalMemory)
+                        ImGui::TextColored(ImVec4(0.9f, 0.2f, 0.2f, 1.0f), "%d MB (!)", m_Processes[i].memory);
+                    else
+                        ImGui::TextColored(Theme::TextSecondary, "%d MB", m_Processes[i].memory);
 
-                    // Col 5: Trash
+                    // Col 5: Priority
                     ImGui::TableSetColumnIndex(4);
+                    cellY = ImGui::GetCursorPosY();
+                    ImGui::SetCursorPosY(cellY + textOffset);
+                    ImGui::TextColored(Theme::TextSecondary, "%d", m_Processes[i].priority);
+
+                    // Col 6: Trash
+                    ImGui::TableSetColumnIndex(5);
                     cellY = ImGui::GetCursorPosY();
                     float colW = ImGui::GetContentRegionAvail().x;
                     ImGui::SetCursorPosX(ImGui::GetCursorPosX() + (colW - 30) / 2);
@@ -289,7 +316,7 @@ namespace CPUVisualizer
                     ImGui::PushID(i);
                     ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0, 0, 0, 0));
                     ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(1, 0, 0, 0.1f));
-                    ImGui::PushStyleColor(ImGuiCol_Text, COL_TEXT_SEC);
+                    ImGui::PushStyleColor(ImGuiCol_Text, Theme::TextSecondary);
                     if (ImGui::Button(ICON_FA_TRASH)) {
                         m_Processes.erase(m_Processes.begin() + i);
                         i--;
@@ -304,8 +331,10 @@ namespace CPUVisualizer
         ImGui::EndChild();
         ImGui::PopStyleVar();
         ImGui::PopStyleColor(2);
+    }
 
-        // --- FOOTER ---
+    void SchedulerUI::RenderFooter()
+    {
         ImGui::Separator();
 
         float btnWidth = 150.0f;
@@ -315,7 +344,7 @@ namespace CPUVisualizer
         ImGui::SetCursorPosY(ImGui::GetCursorPosY() + 8.0f);
 
         ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0, 0, 0, 0));
-        ImGui::PushStyleColor(ImGuiCol_Border, COL_BORDER);
+        ImGui::PushStyleColor(ImGuiCol_Border, Theme::Border);
         ImGui::PushStyleVar(ImGuiStyleVar_FrameBorderSize, 1.0f);
 
         if (ImGui::Button(ICON_FA_FILE_IMPORT "  Import CSV", ImVec2(btnWidth, 45)))
@@ -351,7 +380,7 @@ namespace CPUVisualizer
         ImGui::SameLine();
 
         ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0, 0, 0, 0));
-        ImGui::PushStyleColor(ImGuiCol_Border, COL_BORDER);
+        ImGui::PushStyleColor(ImGuiCol_Border, Theme::Border);
         ImGui::PushStyleVar(ImGuiStyleVar_FrameBorderSize, 1.0f);
         if (ImGui::Button("Reset Default", ImVec2(btnWidth, 45)))
         {
@@ -362,22 +391,12 @@ namespace CPUVisualizer
         ImGui::PopStyleColor(2);
 
         ImGui::SameLine();
-        ImGui::PushStyleColor(ImGuiCol_Button, COL_ACCENT);
+        ImGui::PushStyleColor(ImGuiCol_Button, Theme::Accent);
         if (ImGui::Button(ICON_FA_PLAY "  Run Simulation", ImVec2(btnWidth + 20, 45)))
         {
             if (!m_Processes.empty())
             {
-
-                std::vector<Process> logicInputs;
-                for (auto& p : m_Processes)
-                {
-                    Process proc;
-                    proc.id = p.pid;
-                    proc.arrivalTime = p.arrival;
-                    proc.burstTime = p.burst;
-                    proc.priority = p.priority;
-                    logicInputs.push_back(proc);
-                }
+                auto logicInputs = PrepareLogicInputs();
 
                 auto start = std::chrono::high_resolution_clock::now();
 
@@ -387,6 +406,8 @@ namespace CPUVisualizer
                     m_Results = Preemptive::CalculatePriority(logicInputs);
                 m_ShowResults = true;
 
+                m_Results.systemMemorySize = m_SystemTotalMemory;
+
                 auto end = std::chrono::high_resolution_clock::now();
                 std::chrono::duration<double, std::milli> elapsed = end - start;
 
@@ -394,6 +415,26 @@ namespace CPUVisualizer
             }
         }
         ImGui::PopStyleColor();
+    }
+
+    void SchedulerUI::Render()
+    {
+        SetupStyles();
+
+        const ImGuiViewport* viewport = ImGui::GetMainViewport();
+        ImGui::SetNextWindowPos(viewport->Pos);
+        ImGui::SetNextWindowSize(viewport->Size);
+
+        ImGui::Begin("CPU Scheduler", nullptr, ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoMove |
+            ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_HorizontalScrollbar);
+
+        RenderHeader();
+        RenderIntro();
+        RenderSetupCard();
+        ImGui::Spacing();
+        RenderProcessQueue();
+        RenderTable();
+        RenderFooter();
 
         ImGui::End();
 
@@ -401,30 +442,11 @@ namespace CPUVisualizer
             RenderResults();
     }
 
-    void SchedulerUI::RenderResults()
+    void SchedulerUI::RenderMetrics()
     {
-        ImGuiViewport* viewport = ImGui::GetMainViewport();
-        ImVec2 winSize(viewport->Size.x * 0.85f, viewport->Size.y * 0.85f);
-        ImGui::SetNextWindowSize(winSize, ImGuiCond_Appearing);
-        ImGui::SetNextWindowPos(viewport->GetCenter(), ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
-
-        ImGui::Begin("Simulation Results", &m_ShowResults, ImGuiWindowFlags_NoCollapse);
-
         float contentW = ImGui::GetContentRegionAvail().x;
 
-        ImGui::TextColored(COL_ACCENT, ICON_FA_CHART_PIE " Performance Metrics");
-
-        ImGui::SameLine(ImGui::GetContentRegionAvail().x - 140);
-        if (ImGui::Button(ICON_FA_FILE_EXPORT "  Export CSV", ImVec2(140, 30)))
-        {
-            std::string path = CsvIO::SaveFileDialog();
-            if (!path.empty())
-            {
-                CsvIO::ExportResults(path, m_Results);
-            }
-        }
-
-        ImGui::PushStyleColor(ImGuiCol_ChildBg, COL_CARD);
+        ImGui::PushStyleColor(ImGuiCol_ChildBg, Theme::Card);
         ImGui::PushStyleVar(ImGuiStyleVar_ChildRounding, 6.0f);
 
         if (ImGui::BeginChild("MetricsCard", ImVec2(contentW, 125), true))
@@ -450,7 +472,7 @@ namespace CPUVisualizer
                         ImGui::SetCursorPosY(currentY + offsetY);
 
                     ImGui::SetCursorPosX(ImGui::GetCursorPosX() + (colW - labelSize.x) / 2.0f);
-                    ImGui::TextColored(COL_TEXT_SEC, "%s", label);
+                    ImGui::TextColored(Theme::TextSecondary, "%s", label);
 
                     ImGui::SetCursorPosX(ImGui::GetCursorPosX() + (colW - valSizeScaled.x) / 2.0f);
                     ImGui::SetWindowFontScale(1.5f);
@@ -458,25 +480,23 @@ namespace CPUVisualizer
                     ImGui::SetWindowFontScale(1.0f);
                 };
 
-            RenderCenteredMetric("Avg. Waiting Time", m_Results.averageWaiting, COL_TEXT_MAIN);
+            RenderCenteredMetric("Avg. Waiting Time", m_Results.averageWaiting, Theme::TextMain);
 
             ImGui::NextColumn();
 
-            RenderCenteredMetric("Avg. Turnaround Time", m_Results.averageTurnaround, COL_ACCENT);
+            RenderCenteredMetric("Avg. Turnaround Time", m_Results.averageTurnaround, Theme::Accent);
 
             ImGui::Columns(1);
         }
         ImGui::EndChild();
         ImGui::PopStyleVar();
         ImGui::PopStyleColor();
+    }
 
-        ImGui::Spacing();
-        ImGui::Separator();
-        ImGui::Spacing();
-
-        ImGui::TextColored(COL_ACCENT, ICON_FA_CHART_BAR " Gantt Chart Visualization");
-
-        ImGui::PushStyleColor(ImGuiCol_ChildBg, COL_BG);
+    void SchedulerUI::RenderGanttChart()
+    {
+        float contentW = ImGui::GetContentRegionAvail().x;
+        ImGui::PushStyleColor(ImGuiCol_ChildBg, Theme::Background);
         if (ImGui::BeginChild("GanttArea", ImVec2(contentW, 120), true))
         {
             ImDrawList* draw_list = ImGui::GetWindowDrawList();
@@ -539,13 +559,102 @@ namespace CPUVisualizer
         }
         ImGui::EndChild();
         ImGui::PopStyleColor();
+    }
 
-        ImGui::Spacing();
-        ImGui::Separator();
-        ImGui::Spacing();
+    void SchedulerUI::RenderMemoryVisualization()
+    {
+        float contentW = ImGui::GetContentRegionAvail().x;
+        ImGui::PushStyleColor(ImGuiCol_ChildBg, Theme::Background);
+        if (ImGui::BeginChild("MemoryVis", ImVec2(contentW, 100), true))
+        {
+            ImDrawList* draw_list = ImGui::GetWindowDrawList();
+            ImVec2 p = ImGui::GetCursorScreenPos();
+            float availW = ImGui::GetContentRegionAvail().x;
+            float barHeight = 40.0f;
+            float barY = p.y + 30.0f;
 
-        ImGui::TextColored(COL_ACCENT, ICON_FA_LIST " Detailed Analysis");
+            draw_list->AddRect(ImVec2(p.x, barY), ImVec2(p.x + availW, barY + barHeight),
+                IM_COL32(100, 100, 100, 255), 4.0f);
 
+            std::string totalMemStr = "Total: " + std::to_string(m_Results.systemMemorySize) + " MB";
+            draw_list->AddText(ImVec2(p.x + availW - 100, barY - 20), IM_COL32(200, 200, 200, 255), totalMemStr.c_str());
+
+            float currentUsagePixels = 0.0f;
+            long long currentUsageMB = 0;
+            bool overflowShown = false;
+            float pixelsPerMB = availW / (float)m_Results.systemMemorySize;
+
+            for (const auto& proc : m_Results.processes)
+            {
+                if (proc.memoryNeeded <= 0) continue;
+
+                if (proc.memoryNeeded > m_Results.systemMemorySize)
+                {
+                    float iconX = p.x + 10 + (proc.id * 15);
+                    draw_list->AddText(ImVec2(iconX, barY + barHeight + 5), IM_COL32(255, 50, 50, 255), ICON_FA_TRIANGLE_EXCLAMATION);
+                    continue;
+                }
+
+                if (currentUsageMB + proc.memoryNeeded <= m_Results.systemMemorySize)
+                {
+                    float width = proc.memoryNeeded * pixelsPerMB;
+                    float startX = p.x + currentUsagePixels;
+                    float endX = startX + width;
+
+                    draw_list->AddRectFilled(ImVec2(startX, barY), ImVec2(endX, barY + barHeight),
+                        IM_COL32(60, 180, 100, 200), 0.0f);
+
+                    draw_list->AddRect(ImVec2(startX, barY), ImVec2(endX, barY + barHeight),
+                        IM_COL32(0, 0, 0, 100));
+
+                    if (width > 20)
+                    {
+                        std::string label = "P" + std::to_string(proc.id);
+                        ImVec2 textSize = ImGui::CalcTextSize(label.c_str());
+                        draw_list->AddText(ImVec2(startX + (width - textSize.x) / 2, barY + (barHeight - textSize.y) / 2),
+                            IM_COL32(255, 255, 255, 255), label.c_str());
+                    }
+
+                    currentUsagePixels += width;
+                    currentUsageMB += proc.memoryNeeded;
+                }
+                else
+                {
+                    if (!overflowShown)
+                    {
+                        float limitX = p.x + currentUsagePixels;
+
+                        draw_list->AddLine(ImVec2(limitX, barY - 10), ImVec2(limitX, barY + barHeight + 10),
+                            IM_COL32(255, 50, 50, 255), 3.0f);
+
+                        std::string overflowText = "OVERFLOW";
+                        ImVec2 textSize = ImGui::CalcTextSize(overflowText.c_str());
+
+                        float textX = limitX + 5.0f;
+                        float textY = barY + (barHeight - textSize.y) / 2.0f;
+
+                        if (textX + textSize.x > p.x + availW)
+                        {
+                            textX = limitX - textSize.x / 2.0f;
+                            textY = barY - 25.0f;
+                        }
+
+                        draw_list->AddText(ImVec2(textX, textY), IM_COL32(255, 100, 100, 255), overflowText.c_str());
+
+                        overflowShown = true;
+                    }
+                }
+            }
+
+            std::string usageStr = "Used: " + std::to_string(currentUsageMB) + " MB";
+            draw_list->AddText(ImVec2(p.x, barY - 20), IM_COL32(100, 255, 100, 255), usageStr.c_str());
+        }
+        ImGui::EndChild();
+        ImGui::PopStyleColor();
+    }
+
+    void SchedulerUI::RenderDetailedAnalysis()
+    {
         ImGuiTableFlags tableFlags = ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg | ImGuiTableFlags_ScrollY | ImGuiTableFlags_SizingStretchProp;
 
         if (ImGui::BeginTable("ResultTable", 6, tableFlags))
@@ -563,7 +672,7 @@ namespace CPUVisualizer
                 ImGui::TableNextRow();
 
                 ImGui::TableSetColumnIndex(0);
-                ImGui::TextColored(COL_ACCENT, "P%d", p.id);
+                ImGui::TextColored(Theme::Accent, "P%d", p.id);
 
                 ImGui::TableSetColumnIndex(1);
                 ImGui::Text("%d", p.arrivalTime);
@@ -580,6 +689,57 @@ namespace CPUVisualizer
             }
             ImGui::EndTable();
         }
+    }
+
+    void SchedulerUI::RenderResults()
+    {
+        ImGuiViewport* viewport = ImGui::GetMainViewport();
+        ImVec2 winSize(viewport->Size.x * 0.85f, viewport->Size.y * 0.85f);
+        ImGui::SetNextWindowSize(winSize, ImGuiCond_Appearing);
+        ImGui::SetNextWindowPos(viewport->GetCenter(), ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
+
+        ImGui::Begin("Simulation Results", &m_ShowResults, ImGuiWindowFlags_NoCollapse);
+
+        float contentW = ImGui::GetContentRegionAvail().x;
+
+        ImGui::TextColored(Theme::Accent, ICON_FA_CHART_PIE " Performance Metrics");
+
+        ImGui::SameLine(ImGui::GetContentRegionAvail().x - 140);
+        if (ImGui::Button(ICON_FA_FILE_EXPORT "  Export CSV", ImVec2(140, 30)))
+        {
+            std::string path = CsvIO::SaveFileDialog();
+            if (!path.empty())
+            {
+                CsvIO::ExportResults(path, m_Results);
+            }
+        }
+
+        RenderMetrics();
+
+        ImGui::Spacing();
+        ImGui::Separator();
+        ImGui::Spacing();
+
+        if (ImGui::CollapsingHeader(ICON_FA_CHART_BAR " Gantt Chart Visualization", ImGuiTreeNodeFlags_Framed))
+        {
+            RenderGanttChart();
+        }
+
+        ImGui::Spacing();
+        ImGui::Separator();
+        ImGui::Spacing();
+
+        if (ImGui::CollapsingHeader(ICON_FA_MEMORY " Main Memory Allocation", ImGuiTreeNodeFlags_Framed))
+        {
+            RenderMemoryVisualization();
+        }
+
+        ImGui::Spacing();
+        ImGui::Separator();
+        ImGui::Spacing();
+
+        ImGui::TextColored(Theme::Accent, ICON_FA_LIST " Detailed Analysis");
+        RenderDetailedAnalysis();
 
         ImGui::End();
     }

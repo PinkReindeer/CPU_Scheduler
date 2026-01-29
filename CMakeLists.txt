@@ -14,6 +14,7 @@ add_executable(${PROJECT_NAME} main.cpp
                                 Application.cpp
                                 Graphics/SchedulerUI.h
                                 Graphics/SchedulerUI.cpp
+                                Graphics/Theme.h
                                 Logic/FCFS.h
                                 Logic/FCFS.cpp
                                 Logic/Preemptive.h
