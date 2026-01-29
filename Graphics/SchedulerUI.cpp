@@ -172,9 +172,6 @@ namespace CPUVisualizer
             DrawInputGroup("BURST TIME (MS)", ICON_FA_BOLT, &m_InBurst, colW);
             if (m_InBurst < 1) m_InBurst = 1;
 
-            ImGui::SameLine();
-
-            DrawInputGroup("MEMORY (MB)", ICON_FA_MEMORY, &m_InMemory, colW);
             if (m_InMemory < 0) m_InMemory = 0;
 
             if (m_SelectedAlgo == 1)
@@ -183,6 +180,10 @@ namespace CPUVisualizer
                 DrawInputGroup("PRIORITY", ICON_FA_ARROW_DOWN_SHORT_WIDE, &m_InPriority, colW);
                 if (m_InPriority < 0) m_InPriority = 0;
             }
+
+            ImGui::SameLine();
+
+            DrawInputGroup("MEMORY (MB)", ICON_FA_MEMORY, &m_InMemory, colW);
 
             ImGui::TextColored(Theme::TextSecondary, "SYSTEM MEMORY LIMIT (MB)");
             ImGui::SetNextItemWidth(200);
@@ -629,15 +630,6 @@ namespace CPUVisualizer
 
                         std::string overflowText = "OVERFLOW";
                         ImVec2 textSize = ImGui::CalcTextSize(overflowText.c_str());
-
-                        /*float textX = limitX + 5.0f;
-                        float textY = barY + (barHeight - textSize.y) / 2.0f;
-
-                        if (textX + textSize.x > p.x + availW)
-                        {
-                            textX = limitX - textSize.x / 2.0f;
-                            textY = barY - 25.0f;
-                        }*/
 
                         float textX = p.x + availW - textSize.x + 20.0f;
 
