@@ -24,6 +24,7 @@ namespace CPUVisualizer
         int arrival;
         int burst;
         int priority;
+        int memory;
     };
 
     struct GanttSegment

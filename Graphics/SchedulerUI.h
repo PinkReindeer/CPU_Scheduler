@@ -24,6 +24,7 @@ namespace CPUVisualizer
         int m_InArrival = 0;
         int m_InBurst = 1;
         int m_InPriority = 1;
+        int m_InMemory = 128;
 
         std::vector<ProcessInput> m_Processes;
 

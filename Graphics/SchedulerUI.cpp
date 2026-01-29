@@ -149,7 +149,7 @@ namespace CPUVisualizer
                     ImGui::PopStyleColor();
             }
 
-            int numCols = (m_SelectedAlgo == 1) ? 4 : 3;
+            int numCols = (m_SelectedAlgo == 1) ? 5 : 4;
             float spacing = ImGui::GetStyle().ItemSpacing.x;
             float totalSpacing = (numCols - 1) * spacing;
             float currentAvailW = ImGui::GetContentRegionAvail().x;
@@ -167,12 +167,16 @@ namespace CPUVisualizer
             DrawInputGroup("BURST TIME (MS)", ICON_FA_BOLT, &m_InBurst, colW);
             if (m_InBurst < 1) m_InBurst = 1;
 
+
             if (m_SelectedAlgo == 1)
             {
                 ImGui::SameLine();
                 DrawInputGroup("PRIORITY", ICON_FA_ARROW_DOWN_SHORT_WIDE, &m_InPriority, colW);
                 if (m_InPriority < 0) m_InPriority = 0;
             }
+            ImGui::SameLine();
+
+            DrawInputGroup("MEMORY (MB)", ICON_FA_MEMORY, &m_InMemory, colW);
 
             ImGui::SetCursorPosY(ImGui::GetCursorPosY());
 
@@ -183,8 +187,9 @@ namespace CPUVisualizer
             if (ImGui::Button(ICON_FA_PLUS " Add Process", ImVec2(btnW, 40)))
             {
                 int p = (m_SelectedAlgo == 1) ? m_InPriority : 0;
-                m_Processes.push_back({ m_PIDCounter++, m_InArrival, m_InBurst, p });
+                m_Processes.push_back({ m_PIDCounter++, m_InArrival, m_InBurst, p, m_InMemory });
                 m_InBurst = (rand() % 10) + 1;
+                m_InMemory = ((rand() % 4) + 1) * 64;
             }
             ImGui::PopStyleColor();
         }
@@ -543,6 +548,70 @@ namespace CPUVisualizer
         ImGui::Spacing();
         ImGui::Separator();
         ImGui::Spacing();
+
+        // --- MEMORY ALLOCATION VISUALIZATION ---
+        ImGui::TextColored(COL_ACCENT, ICON_FA_MEMORY " Memory Allocation Map");
+
+        ImGui::PushStyleColor(ImGuiCol_ChildBg, COL_BG);
+        if (ImGui::BeginChild("MemoryMapArea", ImVec2(contentW, 100), true))
+        {
+            ImDrawList* draw = ImGui::GetWindowDrawList();
+            ImVec2 p = ImGui::GetCursorScreenPos();
+            float availW = ImGui::GetContentRegionAvail().x;
+
+            float totalRAM = 1024.0f;
+            float barHeight = 40.0f;
+            float startY = p.y - 5.0f;
+            float startX = p.x + 20.0f;
+            float safeW = availW - 40.0f;
+
+            draw->AddRectFilled(ImVec2(startX, startY), ImVec2(startX + safeW, startY + barHeight), IM_COL32(40, 40, 50, 255), 4.0f);
+            draw->AddRect(ImVec2(startX, startY), ImVec2(startX + safeW, startY + barHeight), IM_COL32(100, 100, 100, 255), 4.0f);
+
+            float currentAddr = 0.0f;
+
+            for (const auto& proc : m_Results.processes)
+            {
+
+                float pSize = 128.0f;
+
+                auto it = std::find_if(m_Processes.begin(), m_Processes.end(),
+                    [&](const auto& item) { return item.pid == proc.id; });
+                if (it != m_Processes.end()) pSize = (float)it->memory;
+
+
+                if (currentAddr + pSize > totalRAM) break;
+
+                float x0 = startX + (currentAddr / totalRAM) * safeW;
+                float x1 = startX + ((currentAddr + pSize) / totalRAM) * safeW;
+
+                ImU32 blkColor = IM_COL32(70, 150, 120, 255);
+                draw->AddRectFilled(ImVec2(x0, startY), ImVec2(x1, startY + barHeight), blkColor, 0.0f);
+                draw->AddLine(ImVec2(x1, startY), ImVec2(x1, startY + barHeight), IM_COL32(0, 0, 0, 100), 2.0f);
+
+                if (x1 - x0 > 40) {
+                    std::string label = "P" + std::to_string(proc.id);
+                    ImVec2 txtSz = ImGui::CalcTextSize(label.c_str());
+                    draw->AddText(ImVec2(x0 + (x1 - x0 - txtSz.x) / 2, startY + 10), IM_COL32(255, 255, 255, 255), label.c_str());
+                }
+
+                currentAddr += pSize;
+            }
+
+            std::string maxRamText = "1024 MB";
+            draw->AddText(ImVec2(startX + safeW - 50, startY + barHeight + 5), IM_COL32(150, 150, 150, 255), maxRamText.c_str());
+            draw->AddText(ImVec2(startX, startY + barHeight + 5), IM_COL32(150, 150, 150, 255), "0 MB");
+
+            if (currentAddr < totalRAM) {
+                float freeX = startX + (currentAddr / totalRAM) * safeW;
+                draw->AddText(ImVec2(freeX + 5, startY + 12), IM_COL32(150, 150, 150, 255), "FREE");
+            }
+        }
+        ImGui::EndChild();
+        ImGui::PopStyleColor();
+
+        ImGui::Spacing();
+        ImGui::Separator();
 
         ImGui::TextColored(COL_ACCENT, ICON_FA_LIST " Detailed Analysis");
 
